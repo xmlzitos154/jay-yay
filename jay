@@ -1,0 +1,163 @@
+#!/bin/bash
+
+## This program is made to simplify the YAY AUR HELPER
+## JAY Ver. 0.4.0 (Yogourt I)
+
+LOG_FILE=$HOME/.cache/joylog.txt
+touch $LOG_FILE
+
+CAB="------ JAY AUR HELPER -------"
+PARU_LOGGER="YAY"
+PACMAN="--basic"
+PARU="--paru|paru"
+PACMAN="--basic|pacman"
+HELP="--help|-h|help"
+
+clear
+if [[ -z "$1" ]]; then
+    echo "$CAB"
+    read -p "Type 'help' for Details: " DO
+else
+    DO="$1"
+    PG="${@:2}"
+fi
+
+if [[ "$DO" =~ ^($PARU)$ ]]; then
+    HELPER="paru"
+    PARU_LOGGER="PARU"
+    
+    if [[ -n "$2" ]]; then
+        DO="$2"
+        PG="${@:3}"
+    else
+        clear
+        echo "$CAB"
+        read -p "Using paru. Type 'help' for Details: " DO
+    fi
+fi
+
+if [[ "$DO" =~ ^($PACMAN)$ ]]; then
+    HELPER="pacman"
+    PARU_LOGGER="PACMAN"
+    
+    if [[ -n "$2" ]]; then
+        DO="$2"
+        PG="${@:3}"
+    else
+        clear
+        echo "$CAB"
+        read -p "Using pacman. Type 'help' for Details: " DO
+    fi
+fi
+
+if [[ "$DO" == "install" ]]; then
+    DO="S"
+    LOGGER="[$PARU_LOGGER INSTALLED]"
+    IS_SorR="1"
+fi
+
+if [[ "$DO" == "remove" ]]; then
+    DO="Rsn"
+    LOGGER="[$PARU_LOGGER REMOVED]"
+    IS_SorR="1"
+fi
+
+if [[ "$DO" == "refresh" ]]; then
+    DO="Syy"
+    LOGGER="[$PARU_LOGGER REFRESHED REPOS]"
+    IS_SorR="0"
+fi
+
+if [[ "$DO" == "refdate" ]]; then
+    DO="Syyu"
+    LOGGER="[$PARU_LOGGER REFRESHED REPOS AND UPDATED]"
+    IS_SorR="0"
+fi
+
+if [[ "$DO" == "update" ]]; then
+    DO="Syu"
+    LOGGER="[$PARU_LOGGER UPDATED]"
+    IS_SorR="0"
+fi
+
+if [[ "$DO" == "search" ]]; then
+    DO="Ss"
+    LOGGER="[$PARU_LOGGER SEARCHED]"
+    IS_SorR="1"
+    
+fi
+
+if [[ "$DO" == "query" ]]; then
+    DO="Qs"
+    LOGGER="[$PARU_LOGGER LOCAL SEARCHED]"
+    IS_SorR="1"
+fi
+
+if [[ "$DO" =~ ^($HELP)$ ]]; then
+    
+    echo "Commands:"
+    echo "$ install    (Sync apps)"
+    echo "$ remove     (Remove apps)"
+    echo "$ refresh    (Refresh repos)"
+    echo "$ update     (Update system)"
+    echo "$ refdate    (Refresh and Update system)"
+    echo "$ help       (Show this list)"
+    echo "$ query      (Local search apps)"
+    echo "$ search     (Search apps)"
+    echo "$ paru       (PARU MODE: use paru against yay)"
+    echo
+    echo "Logger:"
+    echo
+    echo "$ logs       (Show old Syncs log)"
+    echo "$ clear-log  (Clear old Syncs log)"
+    echo
+    exit 0
+fi
+
+if [[ "$DO" == "log" ]]; then
+    cat $LOG_FILE
+    exit 0
+fi
+
+if [[ "$DO" == "exit" ]]; then
+    exit 0
+fi
+
+if [[ "$DO" == "clear" ]]; then
+    rm $LOG_FILE
+    echo "Done"
+    exit 0
+fi
+
+if [[ "$IS_SorR" == "1" ]]; then
+    if [[ -z "$PG" ]]; then
+        clear
+        echo "$CAB"
+        read -p "Program: " PG
+    fi
+    if [[ -z "$PG" ]]; then
+        echo "Erro: Nenhum programa especificado."
+        exit 1
+    fi
+    if $HELPER -$DO $PG --noconfirm; then
+        FINAL_LOG="($(date "+%H:%M - %D")) $LOGGER $PG"
+        echo $FINAL_LOG >> $LOG_FILE
+        echo "" >> $LOG_FILE
+    else
+        echo "($(date "+%H:%M - %D")) [ERROR] COMMAND DON'T FINISH SUCESSFULLY" >> $LOG_FILE
+        echo "" >> $LOG_FILE
+        echo "ERROR: Command not executed correctly"
+    fi
+fi
+
+if [[ "$IS_SorR" == "0" ]]; then
+    if $HELPER -$DO --noconfirm; then
+        FINAL_LOG="($(date "+%H:%M - %D")) $LOGGER"
+        echo $FINAL_LOG >> $LOG_FILE
+        echo "" >> $LOG_FILE
+    else
+        echo "($(date "+%H:%M - %D")) [ERROR] COMMAND DON'T FINISH SUCESSFULLY" >> $LOG_FILE
+        echo "" >> $LOG_FILE
+        echo "ERROR: Command not executed correctly"
+    fi
+fi
