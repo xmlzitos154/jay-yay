@@ -1,0 +1,124 @@
+#!/bin/bash
+
+## This program is made to simplefy the YAY AUR HELPER command
+## Ver. 0.3.8
+
+LOG_FILE=$HOME/.cache/joylog.txt
+touch $LOG_FILE
+HEL="--help|-h|help"
+
+clear
+if [[ -z "$1" ]]; then
+    read -p "Type "help" for Details: " DO
+else
+    DO="$1"
+    PG="${@:2}"
+fi
+if [[ "$DO" == "install" ]]; then
+    DO="S"
+    LOGGER="[INSTALLED]"
+    SR="1"
+fi
+
+if [[ "$DO" == "remove" ]]; then
+    DO="Rsn"
+    LOGGER="[REMOVED]"
+    SR="1"
+fi
+
+if [[ "$DO" == "refresh" ]]; then
+    DO="Syy"
+    LOGGER="[REFRESHED REPOS]"
+    SR="0"
+fi
+
+if [[ "$DO" == "refdate" ]]; then
+    DO="Syyu"
+    LOGGER="[REFRESHED REPOS AND UPDATED]"
+    SR="0"
+fi
+
+if [[ "$DO" == "update" ]]; then
+    DO="Syu"
+    LOGGER="[UPDATED]"
+    SR="0"
+fi
+
+if [[ "$DO" == "search" ]]; then
+    DO="Ss"
+    LOGGER="[SEARCHED]"
+    SR="1"
+    
+fi
+
+if [[ "$DO" == "query" ]]; then
+    DO="Qs"
+    LOGGER="[LOCAL SEARCHED]"
+    SR="1"
+fi
+
+if [[ "$DO" =~ ^($HEL)$ ]]; then
+    
+    echo "Commands:"
+    echo "$ install    (Sync apps)"
+    echo "$ remove     (Remove apps)"
+    echo "$ refresh    (Refresh repos)"
+    echo "$ update     (Update system)"
+    echo "$ refdate    (Refresh and Update system)"
+    echo "$ help       (Show this list)"
+    echo "$ query      (Local search apps)"
+    echo "$ search     (Search apps)"
+    echo
+    echo "Logger:"
+    echo
+    echo "$ logs       (Show old Syncs log)"
+    echo "$ clear-log  (Clear old Syncs log)"
+    echo
+    exit 0
+fi
+
+if [[ "$DO" == "log" ]]; then
+    cat $LOG_FILE
+    exit 0
+fi
+
+if [[ "$DO" == "exit" ]]; then
+    exit 0
+fi
+
+if [[ "$DO" == "clear" ]]; then
+    rm $LOG_FILE
+    echo "Done"
+    exit 0
+fi
+
+if [[ "$SR" == "1" ]]; then
+    if [[ -z "$PG" ]]; then
+        read -p "Program: " PG
+    fi
+    if [[ -z "$PG" ]]; then
+    echo "Erro: Nenhum programa especificado."
+    exit 1
+fi
+    if yay -$DO $PG --noconfirm; then
+        FINAL_LOG="($(date "+%H:%M - %D")) $LOGGER $PG"
+        echo $FINAL_LOG >> $LOG_FILE
+        echo "" >> $LOG_FILE
+    else
+        echo "($(date "+%H:%M - %D")) [ERROR] COMMAND DON'T FINISH SUCESSFULLY" >> $LOG_FILE
+        echo "" >> $LOG_FILE
+        echo "ERROR: Command not executed correctly"
+    fi
+fi
+
+if [[ "$SR" == "0" ]]; then
+    if yay -$DO --noconfirm; then
+        FINAL_LOG="($(date "+%H:%M - %D")) $LOGGER"
+        echo $FINAL_LOG >> $LOG_FILE
+        echo "" >> $LOG_FILE
+    else
+        echo "($(date "+%H:%M - %D")) [ERROR] COMMAND DON'T FINISH SUCESSFULLY" >> $LOG_FILE
+        echo "" >> $LOG_FILE
+        echo "ERROR: Command not executed correctly"
+    fi
+fi

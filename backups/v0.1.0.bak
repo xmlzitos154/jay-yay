@@ -1,0 +1,45 @@
+#!/bin/bash
+
+## This program is made to simplefy the YAY AUR HELPER command
+## Ver. 0.1.0
+
+clear
+read -p "yay -input: " DO
+
+if [[ "$DO" == "help" ]]; then
+
+echo -e "Opções disponíveis:\n"
+    echo "S    (Sync)"
+    echo "R    (Remove)"
+    echo "U    (Update)"
+    echo "Sy   (Refresh)"
+    echo "Syu  (Update system)"
+    echo "Syyu (Refresh and Update system)"
+    echo
+    echo -e "\nProg: O pacote que você quer mexer."
+    echo
+    read -p "Pressione Enter para continuar..."
+exec "$0"
+fi
+
+if [[ "$DO" == "log" ]]; then
+
+cat .cache/joylog.txt
+read -p "Pressione Enter para continuar..."
+exec "$0"
+fi
+
+if [[ "$DO" == "clear-log" ]]; then
+rm $HOME/.cache/joylog.txt
+read -p "Concluido..."
+exec "$0"
+fi
+
+read -p "yay -$DO input: " PR
+
+
+yay -$DO $PR --noconfirm
+mkdir -p $HOME/.cache
+echo $PR >> $HOME/.cache/joylog.txt
+
+#END
