@@ -1,0 +1,34 @@
+ --- Changelog / Patches ---
+
+ UPD 01: Melhorando o codigo e deixando mais simples. 07/02/26 - 13:30
+
+ UPD 02: Implementado um debugger para o Log de modificação,
+  e corrigindo um Bug que tem 2 updates diferentes no mesmo Comando. 07/02/26 - 14:50
+
+ UPD 03: Pequenos erros corrigidos, e, agora o uninstall (-R) será (-Rsn). 07/02/26 - 16:18
+ UPD 03; FINAL: Tambem criado ocasiões propias para o Syy e Syyu.
+
+ UPD 04: Criado Verificação de exito no yay antes de escrever a log. (Ainda terá mais atualizações nesse patch) 08/02/26 - 11:13
+ UPD 04_PATCHES: 
+ Adicionado Comandos externos como joy install <Progama>
+ Corrigido Bugs finais
+ UPD 04; FINAL: Versão 0.3.0 Pronta e não será mais beta. 08/02/26 - 12:01
+
+ UPD 05: Aumentando Detalhes Do log, e, Deixando o comando interno e externo mais elegante. Tambem corrigindo Pequenos detalhes.
+ UPD 05; A2: Tambem atualizando o texto do joy help.
+ UPD 05; FINAL: Adicionado modificação de multiplos apps.
+
+ UPD 06: Adicionando os modulos -Qs e -Ss, para pesquisa de aplicativos. 08/02/26 - 15:27
+ UPD 06; A2: Adicionado os modulos -h e --help.
+ UPD 06; FINAL: o modulo logs, agora será log.
+
+>> UPD 07: A Grande atualização!
+
+UPD 07: Nome do Programa alterado de JOY (Just One Yogourt) para JAY (Just Another Yogourt) 08/02/26 - 20:01
+UPD 07; A2: A Partir da Versão 0.4.0, As versões tambem serão tratadas com codenames.
+UPD 07; A3: Criando uma alternativa Para o uso do AUR HELPER: PARU. Basta usar a flag --paru, ou digitar paru no Programa interno.
+UPD 07 ; A4: Melhorando a estetica do comando interno.
+UPD 08; FINAL: Adicionado o pacman puro como opção. Basta usar a flag --basic, ou digitar pacman no Programa interno.
+
+UPD 09; Correção de Bugs de rotina. 09/02/26 - 18:58 
+ --- Fim ---
