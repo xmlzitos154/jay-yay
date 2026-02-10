@@ -19,12 +19,12 @@ case "$1" in
     paru|--paru)
         HELPER="paru"
         HELPER_LOG="PARU"
-        shift # <--- A MÁGICA: Remove o 'paru' da fila. O $2 vira $1.
+        shift
     ;;
     pacman|--basic)
         HELPER="pacman"
         HELPER_LOG="PACMAN"
-        shift # <--- A MÁGICA: Remove o 'pacman'. O $2 vira $1.
+        shift 
     ;;
 esac
 
