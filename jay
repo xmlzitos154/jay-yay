@@ -115,8 +115,6 @@ while true; do
         ;;
         *)
             echo "Command not Found: $DO"
-            sleep 2
-            read -p "Press any key..."
             exit 1
         ;;
     esac
