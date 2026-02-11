@@ -26,105 +26,91 @@ case "$1" in
     ;;
 esac
 
-clear
 if [[ -z "$1" ]]; then
-    IN_CODE=true
+    echo "Usage: jay [command] [package]"
+    exit 1
 fi
-while true; do
-    DO=""
-    PG=""
-    if [[ "$IN_CODE" == "true" ]]; then
-        
-        read -p "Type 'help' for Details: " DO
-    else
-        DO="$1"
-        PG="${@:2}"
-    fi
-    
-    case "$DO" in
-        "install")
-            DO="S"
-            LOGGER="[$HELPER_LOG INSTALLED]"
-            IS_SorR="1"
-        ;;
-        "remove")
-            DO="Rsn"
-            LOGGER="[$HELPER_LOG REMOVED]"
-            IS_SorR="1"
-        ;;
-        "refresh")
-            DO="Syy"
-            LOGGER="[$HELPER_LOG REFRESHED REPOS]"
-            IS_SorR="0"
-        ;;
-        "refdate")
-            DO="Syyu"
-            LOGGER="[$HELPER_LOG REFRESHED REPOS AND UPDATED]"
-            IS_SorR="0"
-        ;;
-        "update")
-            DO="Syu"
-            LOGGER="[$HELPER_LOG UPDATED]"
-            IS_SorR="0"
-        ;;
-        "search")
-            DO="Ss"
-            LOGGER="[$HELPER_LOG SEARCHED]"
-            IS_SorR="1"
-        ;;
-        "query")
-            DO="Qs"
-            LOGGER="[$HELPER_LOG LOCAL SEARCHED]"
-            IS_SorR="1"
-        ;;
-        --help|-h|help)
-            echo "Commands:"
-            echo "$ install    (Sync apps)"
-            echo "$ remove     (Remove apps)"
-            echo "$ refresh    (Refresh repos)"
-            echo "$ update     (Update system)"
-            echo "$ refdate    (Refresh and Update system)"
-            echo "$ help       (Show this list)"
-            echo "$ query      (Local search apps)"
-            echo "$ search     (Search apps)"
-            echo "$ paru       (PARU MODE: use paru against yay)"
-            echo
-            echo "Logger:"
-            echo
-            echo "$ show-logs       (Show what the program has done recently)"
-            echo "$ clog            (Clear all logs)"
-            echo
-            exit 0
-        ;;
-        
-        "show-logs")
-            cat $LOG_FILE
-            exit 0
-        ;;
-        
-        "exit")
-            exit 0
-        ;;
-        
-        "clog")
-            rm $LOG_FILE
-            echo "Done"
-            exit 0
-        ;;
-        *)
-            echo "Command not Found: $DO"
-            exit 1
-        ;;
-    esac
-    break
-done
 
+DO="$1"
+PG="${@:2}"
+
+case "$DO" in
+    "install")
+        DO="S"
+        LOGGER="[$HELPER_LOG INSTALLED]"
+        IS_SorR="1"
+    ;;
+    "remove")
+        DO="Rsn"
+        LOGGER="[$HELPER_LOG REMOVED]"
+        IS_SorR="1"
+    ;;
+    "refresh")
+        DO="Syy"
+        LOGGER="[$HELPER_LOG REFRESHED REPOS]"
+        IS_SorR="0"
+    ;;
+    "refdate")
+        DO="Syyu"
+        LOGGER="[$HELPER_LOG REFRESHED REPOS AND UPDATED]"
+        IS_SorR="0"
+    ;;
+    "update")
+        DO="Syu"
+        LOGGER="[$HELPER_LOG UPDATED]"
+        IS_SorR="0"
+    ;;
+    "search")
+        DO="Ss"
+        LOGGER="[$HELPER_LOG SEARCHED]"
+        IS_SorR="1"
+    ;;
+    "query")
+        DO="Qs"
+        LOGGER="[$HELPER_LOG LOCAL SEARCHED]"
+        IS_SorR="1"
+    ;;
+    --help|-h|help)
+        echo "Commands:"
+        echo "$ install    (Sync apps)"
+        echo "$ remove     (Remove apps)"
+        echo "$ refresh    (Refresh repos)"
+        echo "$ update     (Update system)"
+        echo "$ refdate    (Refresh and Update system)"
+        echo "$ help       (Show this list)"
+        echo "$ query      (Local search apps)"
+        echo "$ search     (Search apps)"
+        echo "$ paru       (PARU MODE: use paru against yay)"
+        echo
+        echo "Logger:"
+        echo
+        echo "$ show-logs       (Show what the program has done recently)"
+        echo "$ clog            (Clear all logs)"
+        echo
+        exit 0
+    ;;
+    
+    "show-logs")
+        cat $LOG_FILE
+        exit 0
+    ;;
+    
+    "exit")
+        exit 0
+    ;;
+    
+    "clog")
+        rm $LOG_FILE
+        echo "Done"
+        exit 0
+    ;;
+    *)
+        echo "Command not Found: $DO"
+        exit 1
+    ;;
+esac
 
 if [[ "$IS_SorR" == "1" ]]; then
-    if [[ -z $PG ]]; then
-        clear
-        read -p "Program: " PG
-    fi
     if [[ -z $PG ]]; then
         echo "Erro: Nenhum programa especificado."
         exit 1
