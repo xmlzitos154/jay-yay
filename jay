@@ -13,8 +13,6 @@ HELP="--help|-h|help"
 HELPER="yay"
 ## ---- ##
 
-IN_CODE=false
-
 case "$1" in
     paru|--paru)
         HELPER="paru"
