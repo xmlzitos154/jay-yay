@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 
-# Configurações iniciais
 LOG_FILE="$HOME/.cache/jaylog.txt"
-VER="JAY version: 0.5.2"
+VER="JAY version: 1.0"
 TIMESTAMP="$(date "+%H:%M - %D")"
 
-# Garante que o arquivo de log existe
 touch "$LOG_FILE"
 
 help_usage() {
@@ -30,7 +28,6 @@ ARG="$1"
 PG="${@:2}"
 FLAG="null"
 
-# Verifica se é install ou remove
 [[ "$ARG" =~ ^(install|remove)$ ]] && IOR="1" || IOR="0"
 
 case "$ARG" in
@@ -54,7 +51,6 @@ if [[ "$IOR" == "1" && -z "$PG" ]]; then
     exit 1
 fi
 
-# Execução do yay com tratamento de aspas para os pacotes
 if yay -"$FLAG" ${IOR/1/"$PG"}; then
     FINAL_LOG="($TIMESTAMP) $LOGGER ${IOR/1/"$PG"}"
     echo "$FINAL_LOG" >> "$LOG_FILE"
