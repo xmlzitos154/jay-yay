@@ -10,7 +10,6 @@ if [[ $EUID -ne 0 ]]; then
     echo "Please run me as sudo."
     exit 1
 fi
-
 if ! command -v yay &> /dev/null; then
     echo "ERRO: O yay não foi encontrado."
     echo "Saindo com status 1 (Dependencias não encontradas.)"
