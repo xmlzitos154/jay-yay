@@ -39,7 +39,10 @@ case "$ARG" in
     "search")  FLAG="Ss"   ; LOGGER="[SEARCHED]"  ;;
     "query")   FLAG="Qs"   ; LOGGER="[QUERIED]"   ;;
     "cache")   FLAG="Sc"   ; LOGGER="[CACHE CLEAN]" ;;
-    "slog")    cat "$LOG_FILE" ; exit 0 ;;
+    "slog")    sed -e 's/\[INSTALLED\]/\x1b[32m&\x1b[0m/' \
+        -e 's/\[REMOVED\]/\x1b[31m&\x1b[0m/' \
+        -e 's/\[ERROR\]/\x1b[41;37m&\x1b[0m/' "$LOG_FILE" | column -t -s ' '
+    exit 0 ;;
     "clog")    > "$LOG_FILE"   ; echo "Logs limpos." ; exit 0 ;;
     --help|-h|help) help_msg ;;
     ver|--version|-v) echo -e "\n $VER \n" ; exit 0 ;;
