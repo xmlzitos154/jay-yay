@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SOURCE="$SCRIPT_DIR/main.sh"
+SOURCE="$SCRIPT_DIR/main"
 
 BIN_NAME="jay"
 INSTALL_PATH="/usr/bin/$BIN_NAME"
