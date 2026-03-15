@@ -28,7 +28,7 @@ ARG="$1"
 PG="${@:2}"
 FLAG="null"
 
-[[ "$ARG" =~ ^(install|remove)$ ]] && IOR="1" || IOR="0"
+[[ "$ARG" =~ ^(install|remove)$ ]] && IOR="1" || IOR=""
 
 case "$ARG" in
     "install") FLAG="S"    ; LOGGER="[INSTALLED]" ;;
