@@ -1,0 +1,67 @@
+#!/bin/env bash
+LOG_FILE=$HOME/.cache/jaylog.txt
+
+VER="JAY version: 0.5.2"
+
+touch $LOG_FILE
+HELP="--help|-h|help"
+
+TIMESTAMP="$(date "+%H:%M - %D")"
+
+help_usage() {
+    echo "jay usage: [Argument] [Packages]"
+    exit 1
+}
+
+help_msg() {
+    echo "$VER"
+    echo -e "Commands:\n"
+    echo "  install    (Sync apps)       |  remove     (Remove apps)"
+    echo "  refresh    (Refresh repos)   |  update     (Update system)"
+    echo "  refdate    (Sync & Update)   |  search     (Search AUR/Repo)"
+    echo "  query      (Local search)    |  cache      (Clear cache)"
+    echo -e "\nLogger:\n"
+    echo "  slog       (Show logs)       |  clog       (Clear logs)"
+    echo "  help       (Show this list)"
+    exit 0
+}
+
+ARG="$1"
+PG="${@:2}"
+
+FLAG="null"
+
+[[ "$ARG" =~ ^(install|remove)$ ]] && IOR="1" || IOR="0"
+
+case "$ARG" in
+    "install") FLAG="S"    ; LOGGER="[INSTALLED]" ;;
+    "remove")  FLAG="Rsn"  ; LOGGER="[REMOVED]"   ;;
+    "refresh") FLAG="Syy"  ; LOGGER="[REFRESHED]" ;;
+    "update")  FLAG="Syu"  ; LOGGER="[UPDATED]"   ;;
+    "refdate") FLAG="Syyu" ; LOGGER="[REF+UPDATED]" ;;
+    "search")  FLAG="Ss"   ; LOGGER="[SEARCHED]"  ;;
+    "query")   FLAG="Qs"   ; LOGGER="[QUERIED]"   ;;
+    "cache")   FLAG="Sc"  ; LOGGER="[CACHE CLEAN]" ;;
+    "slog")    cat "$LOG_FILE" ; exit 0 ;;
+    "clog")    > "$LOG_FILE"   ; echo "Logs limpos." ; exit 0 ;;
+    --help|-h|help) help_msg ;;
+    ver|--version|-v) echo -e "\n $VER \n" ; exit 0 ;;
+    *) help_usage ;;
+esac
+
+if [[ "$IOR" == "1" && -z "$PG" ]]; then
+    echo "Erro: Nenhum programa especificado."
+    exit 1
+fi
+
+if  yay -"$FLAG" ${IOR/1/$PG}; then
+    FINAL_LOG="($TIMESTAMP) $LOGGER ${IOR/1/$PG}"
+    echo "$FINAL_LOG" >> "$LOG_FILE"
+else
+    ERROR_MSG="($TIMESTAMP) [ERROR] COMMAND DOESN'T FINISH SUCCESSFULLY"
+    echo "$ERROR_MSG" >> "$LOG_FILE"
+    echo "ERRO: Comando não executado corretamente."
+    echo "Você pode analisar erros em $LOG_FILE."
+    echo "--> Saindo com status 1"
+    exit 1
+fi
