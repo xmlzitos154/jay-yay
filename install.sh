@@ -17,32 +17,34 @@ if ! command -v yay &> /dev/null; then
 fi
 
 installer() {
+    echo "jay Ver: 1.0"
     if [[ ! -f "$SOURCE" ]]; then
         echo "FATAL: File '$SOURCE' not found."
         exit 1
     fi
-
+    
     echo "Installing $BIN_NAME in $INSTALL_PATH..."
-
+    
     install -Dm755 "$SOURCE" "$INSTALL_PATH"
-
+    
     if [[ $? -eq 0 ]]; then
         echo -e "\n$BIN_NAME installed successfully!"
     else
         echo "Error: $BIN_NAME not installed successfully."
         exit 1
     fi
-
+    
     read -p "Press any key to exit..." -n1 -s
     exit 0
 }
 
 remove() {
+    echo "jay Ver: 1.0"
     if [[ ! -f "$INSTALL_PATH" ]]; then
         echo "Error: $BIN_NAME not found in $INSTALL_PATH."
         exit 1
     fi
-
+    
     echo "Removing $BIN_NAME..."
     rm "$INSTALL_PATH"
     
@@ -51,7 +53,7 @@ remove() {
     else
         echo "Error removing $BIN_NAME."
     fi
-
+    
     read -p "Press any key to exit..." -n1 -s
     exit 0
 }
@@ -69,13 +71,13 @@ while true; do
     case "$DO" in
         "1") installer ;;
         "2") remove ;;
-        "3") 
+        "3")
             echo "Exiting..."
-            exit 0 
-            ;;
+            exit 0
+        ;;
         *)
             echo "Command does not exist."
             read -p "Press [Enter] to continue."
-            ;;
+        ;;
     esac
 done
