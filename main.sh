@@ -1,6 +1,8 @@
 #!/bin/env bash
 LOG_FILE=$HOME/.cache/jaylog.txt
 
+VER="JAY version: 0.5.2"
+
 touch $LOG_FILE
 HELP="--help|-h|help"
 
@@ -12,6 +14,7 @@ help_usage() {
 }
 
 help_msg() {
+    echo "$VER"
     echo -e "Commands:\n"
     echo "  install    (Sync apps)       |  remove     (Remove apps)"
     echo "  refresh    (Refresh repos)   |  update     (Update system)"
@@ -42,6 +45,7 @@ case "$ARG" in
     "slog")    cat "$LOG_FILE" ; exit 0 ;;
     "clog")    > "$LOG_FILE"   ; echo "Logs limpos." ; exit 0 ;;
     --help|-h|help) help_msg ;;
+    ver|--version|-v) echo -e "\n $VER \n" ; exit 0 ;;
     *) help_usage ;;
 esac
 
