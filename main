@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
 
-VER="1.2.0"
+VER="1.2.1"
 
 if ! command -v yay &>/dev/null; then
-    echo "Erro: yay não está instalado."
+    echo "erro: yay não está instalado."
     exit 1
 fi
 
 LOG_FILE="$HOME/.cache/jaylog.txt"
-LOG_DATE="$(date "+%H:%M - %d/%m/%Y")"
-
 [[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
 
 help_usage() {
@@ -18,75 +16,114 @@ help_usage() {
 }
 
 help_msg() {
-    echo "JAY - a simple yay wrapper. version: $VER"
-    echo -e "Commands:\n"
-    echo "  install    (Sync apps)       |  remove     (Remove apps)"
-    echo "  refresh    (Refresh repos)   |  update     (Update system)"
-    echo "  search     (Search AUR/Repo) |  query      (Local search)"
-    echo "  cache      (Clear cache - may remove old packages)"
-    echo -e "\nLogger:\n"
-    echo "  slog       (Show logs)       |  clog       (Clear logs)"
-    echo "  help       (Show this list)"
+    printf "JAY - a simple yay wrapper. version: %s\n" "$VER"
+    printf "Commands:\n\n"
+    printf "  install    (Sync apps)       |  remove     (Remove apps)\n"
+    printf "  refresh    (Refresh repos)   |  update     (Update system)\n"
+    printf "  search     (Search AUR/Repo) |  query      (Local search)\n"
+    printf "  cache      (Clear cache - may remove old packages)\n"
+    printf "\nLogger:\n\n"
+    printf "  slog       (Show logs)       |  clog       (Clear logs)\n"
+    printf "  help       (Show this list)\n"
     exit 0
 }
 
 ARG="$1"
 CMD=""
 LOGGER=""
-
 ARGS=()
-NOCONFIRM=""
+NOCONFIRM=()
 
 for arg in "${@:2}"; do
     if [[ "$arg" == "--noconfirm" || "$arg" == "-y" ]]; then
-        NOCONFIRM="--noconfirm"
+        NOCONFIRM=("--noconfirm")
     else
         ARGS+=("$arg")
     fi
 done
 
-PKGS="${ARGS[*]}"
-
 [[ -z "$ARG" ]] && help_usage
 
 case "$ARG" in
-    "install") CMD="-S"   ; LOGGER="[INSTALLED]" ;;
-    "remove")  CMD="-Rsn" ; LOGGER="[REMOVED]"   ;;
-    "refresh") CMD="-Syy" ; LOGGER="[REFRESHED]" ;;
-    "update")  CMD="-Syu" ; LOGGER="[UPDATED]"   ;;
-    "search")  CMD="-Ss"  ; LOGGER="[SEARCHED]"  ;;
-    "query")   CMD="-Qs"  ; LOGGER="[QUERIED]"   ;;
+    "install")
+        CMD="-S"
+        LOGGER="[INSTALLED]"
+        ;;
+    "remove")
+        CMD="-Rsn"
+        LOGGER="[REMOVED]"
+        ;;
+    "refresh")
+        [[ ${#ARGS[@]} -gt 0 ]] && echo "Aviso: argumentos ignorados para 'refresh'."
+        ARGS=()
+        CMD="-Syy"
+        LOGGER="[REFRESHED]"
+        ;;
+    "update")
+        [[ ${#ARGS[@]} -gt 0 ]] && echo "Aviso: argumentos ignorados para 'update'."
+        ARGS=()
+        CMD="-Syu"
+        LOGGER="[UPDATED]"
+        ;;
+    "search")
+        CMD="-Ss"
+        LOGGER="[SEARCHED]"
+        ;;
+    "query")
+        CMD="-Qs"
+        LOGGER="[QUERIED]"
+        ;;
     "cache")
+        [[ ${#ARGS[@]} -gt 0 ]] && echo "Aviso: argumentos ignorados para 'cache'."
+        ARGS=()
         read -rp "Limpar cache? [y/N]: " confirm
         [[ $confirm =~ ^[Yy]$ ]] || exit 0
         CMD="-Sc"
         LOGGER="[CACHE CLEAN]"
-    ;;
+        ;;
     "slog")
-    [[ ! -s "$LOG_FILE" ]] && { echo "Nenhum log encontrado."; exit 0; }
+        [[ ! -s "$LOG_FILE" ]] && { echo "Nenhum log encontrado."; exit 0; }
         sed -e 's/\[INSTALLED\]/\x1b[32m&\x1b[0m/' \
-        -e 's/\[REMOVED\]/\x1b[31m&\x1b[0m/' \
-        -e 's/\[ERROR\]/\x1b[41;37m&\x1b[0m/' "$LOG_FILE" | column -t -s '|'
-    exit 0 ;;
+            -e 's/\[REMOVED\]/\x1b[31m&\x1b[0m/' \
+            -e 's/\[ERROR\]/\x1b[41;37m&\x1b[0m/' "$LOG_FILE" | column -t -s '|'
+        exit 0
+        ;;
     "clog")
-    > "$LOG_FILE" ; echo "Logs limpos." ; exit 0 ;;
-    --help|-h|help) help_msg ;;
-    ver|--version|-v) echo -e "\n JAY version: $VER \n" ; exit 0 ;;
-    *) help_usage ;;
+        > "$LOG_FILE"
+        echo "Logs limpos."
+        exit 0
+        ;;
+    --help|-h|help)
+        help_msg
+        ;;
+    ver|--version|-v)
+        printf "\n JAY version: %s \n\n" "$VER"
+        exit 0
+        ;;
+    *)
+        help_usage
+        ;;
 esac
 
 if [[ "$ARG" =~ ^(install|remove)$ ]] && [[ ${#ARGS[@]} -eq 0 ]]; then
     echo "Nenhum programa especificado."
-    exit 0
+    exit 1
 fi
 
-if yay "$CMD" "${ARGS[@]}" ${NOCONFIRM:+$NOCONFIRM}; then
-    FINAL_LOG="($LOG_DATE)|$LOGGER|${PKGS:-SYSTEM}"
-    echo "$FINAL_LOG" >> "$LOG_FILE"
+if [[ "$ARG" =~ ^(search|query)$ ]] && [[ ${#ARGS[@]} -eq 0 ]]; then
+    echo "Informe um termo para busca."
+    exit 1
+fi
+
+PKGS=$(IFS=','; echo "${ARGS[*]}")
+
+if yay "$CMD" "${ARGS[@]}" "${NOCONFIRM[@]}"; then
+    LOG_DATE="$(date "+%H:%M - %d/%m/%Y")"
+    echo "($LOG_DATE)|$LOGGER|${PKGS:-SYSTEM}" >> "$LOG_FILE"
 else
-    ERROR_MSG="($LOG_DATE)|[ERROR]|$ARG $PKGS"
-    echo "$ERROR_MSG" >> "$LOG_FILE"
-    echo "ERRO ao executar comando: jay $ARG $PKGS"
+    LOG_DATE="$(date "+%H:%M - %d/%m/%Y")"
+    echo "($LOG_DATE)|[ERROR]|$ARG ${PKGS:-SYSTEM}" >> "$LOG_FILE"
+    echo "ERRO ao executar comando: jay $ARG ${PKGS:-SYSTEM}"
     echo "Verifique os logs em $LOG_FILE."
     exit 1
 fi
