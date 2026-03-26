@@ -117,15 +117,27 @@ fi
 
 PKGS=$(IFS=','; echo "${ARGS[*]}")
 
-yay "$CMD" "${ARGS[@]}" "${NOCONFIRM[@]}"
+TMP_LOG=$(mktemp)
+
+yay "$CMD" "${ARGS[@]}" "${NOCONFIRM[@]}" 2>&1 | tee "$TMP_LOG"
 STATUS=$?
 
+LOG_DATE="$(date "+%H:%M - %d/%m/%Y")"
+
 if [[ $STATUS -eq 0 ]]; then
-    LOG_DATE="$(date "+%H:%M - %d/%m/%Y")"
-    echo "($LOG_DATE)|$LOGGER|${PKGS:-SYSTEM}" >> "$LOG_FILE"
+    if [[ "$ARG" == "update" ]]; then
+
+        UPDATED_PKGS=$(grep "upgraded" "$TMP_LOG" | awk '{print $3}' | paste -sd "," -)
+        
+        FINAL_PKGS="${UPDATED_PKGS:-SYSTEM (no changes)}"
+    else
+        FINAL_PKGS="${PKGS:-SYSTEM}"
+    fi
+
+    echo "($LOG_DATE)|$LOGGER|$FINAL_PKGS" >> "$LOG_FILE"
 else
-    LOG_DATE="$(date "+%H:%M - %d/%m/%Y")"
     echo "($LOG_DATE)|[ERROR]|$ARG ${PKGS:-SYSTEM}" >> "$LOG_FILE"
-    echo "ERRO ao executar comando: jay $ARG ${PKGS:-SYSTEM}"
-    exit 1
+    echo -e "\n\e[31m[!] ERRO ao executar: jay $ARG\e[0m"
 fi
+
+rm "$TMP_LOG"
