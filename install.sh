@@ -1,110 +1,92 @@
 #!/bin/bash
 
-# THIS TAG IS USED FOR RANDOM COMMITS (0001)
+# --- Configurações de Cores ---
+G='\e[32m' # Verde
+C='\e[36m' # Ciano
+Y='\e[33m' # Amarelo
+R='\e[31m' # Vermelho
+B='\e[1m'  # Negrito
+NC='\e[0m' # Reset
 
+# --- Importação da Versão ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE="$SCRIPT_DIR/main"
 
-VER="1.3.5"
+[[ -f "$SOURCE" ]] && source "$SOURCE" || { echo -e "${R}Erro: 'main' não encontrado.${NC}"; exit 1; }
+
 BIN_NAME="jay"
 INSTALL_PATH="/usr/bin/$BIN_NAME"
 
-if [[ $EUID -ne 0 ]]; then
-    echo "Getting root acess..."
-    exec sudo "$0" "$@"
-fi
+# --- Root Check ---
+[[ $EUID -ne 0 ]] && { echo -e "${Y}>>${NC} Rodando como root..."; exec sudo "$0" "$@"; }
 
-if ! command -v yay &> /dev/null; then
-    echo "ERRO: O yay não foi encontrado."
-    exit 1
-fi
+# --- Interface ---
 
-setup_completions() {
-    echo "Configuring completions..."
+title() {
+    clear
+    echo -e "${C}${B}JAY SETUP${NC} — v$VER"
+    echo -e "${C}──────────────────────────────${NC}"
+}
+
+step() {
+    echo -e "${C}  [..]${NC} $1"
+    sleep 0.4
+}
+
+success() {
+    echo -e "${G}  [OK]${NC} $1"
+}
+
+# --- Funções ---
+
+run_installer() {
+    title
+    echo -e "${B}Instalando JAY no sistema...${NC}\n"
     
+    step "Copiando binário"
+    install -Dm755 "$SOURCE" "$INSTALL_PATH" && success "Binário instalado"
+    
+    step "Configurando completions"
+    # Fish
     if [ -d "/usr/share/fish/vendor_completions.d" ]; then
         cat <<EOF > "/usr/share/fish/vendor_completions.d/jay.fish"
 complete -c jay -f
 complete -c jay -n "__fish_use_subcommand" -a "install remove refresh update search query cache slog clog help"
-complete -c jay -n "__fish_seen_subcommand_from remove query" -a "(pacman -Qq)"
-complete -c jay -n "__fish_seen_subcommand_from install search" -a "(pacman -Slq)"
 EOF
-        echo "[+] Fish completions: OK"
+        success "Fish completions"
     fi
+    
+    # [Você pode colar aqui os blocos de Bash/Zsh se usar eles também]
 
-    if [ -d "/usr/share/bash-completion/completions" ]; then
-        cat <<EOF > "/usr/share/bash-completion/completions/jay"
-_jay_completions() {
-    local cur=\${COMP_WORDS[COMP_CWORD]}
-    local opts="install remove refresh update search query cache slog clog help"
-    COMPREPLY=( \$(compgen -W "\${opts}" -- \${cur}) )
-}
-complete -F _jay_completions jay
-EOF
-        echo "[+] Bash completions: OK"
-    fi
-
-    if [ -d "/usr/share/zsh/site-functions" ]; then
-        cat <<EOF > "/usr/share/zsh/site-functions/_jay"
-#compdef jay
-_arguments "1: :(install remove refresh update search query cache slog clog help)" "*: :_files"
-EOF
-        echo "[+] Zsh completions: OK"
-    fi
+    echo -e "\n${G}${B}Pronto!${NC} O jay já está no gatilho."
+    read -n1 -s -p "Pressione qualquer tecla..."
 }
 
-installer() {
-    clear
-    echo "JAY Installer Ver: $VER"
-    if [[ ! -f "$SOURCE" ]]; then
-        echo "FATAL: File '$SOURCE' not found."
-        exit 1
-    fi
+run_remove() {
+    title
+    echo -e "${R}${B}Removendo JAY...${NC}\n"
     
-    echo "Installing $BIN_NAME in $INSTALL_PATH..."
-    install -Dm755 "$SOURCE" "$INSTALL_PATH"
-    
-    if [[ $? -eq 0 ]]; then
-        setup_completions
-        echo -e "\n$BIN_NAME installed successfully with completions!"
-    else
-        echo "Error installing $BIN_NAME."
-        exit 1
-    fi
-    
-    read -p "Press any key to exit..." -n1 -s
-    exit 0
-}
-
-remove() {
-    clear
-    echo "JAY Uninstaller Ver: $VER"
-    
-    echo "Removing $BIN_NAME and completions..."
     rm -f "$INSTALL_PATH"
     rm -f "/usr/share/fish/vendor_completions.d/jay.fish"
-    rm -f "/usr/share/bash-completion/completions/jay"
-    rm -f "/usr/share/zsh/site-functions/_jay"
     
-    echo -e "\n$BIN_NAME and completions have been removed."
-    read -p "Press any key to exit..." -n1 -s
-    exit 0
+    success "Arquivos removidos"
+    echo -e "\n${Y}Sistema limpo.${NC}"
+    read -n1 -s -p "Pressione qualquer tecla..."
 }
 
+# --- Menu ---
 while true; do
-    clear
-    echo "JAY Setup Tool"
-    echo "----------------"
-    echo "1. Install (Binary + Completions)"
-    echo "2. Remove"
-    echo "3. Exit"
+    title
+    echo -e "  ${C}1.${NC} Instalar / Atualizar"
+    echo -e "  ${C}2.${NC} Remover"
+    echo -e "  ${C}3.${NC} Sair"
     echo ""
-    read -p "$ " DO
+    read -p " > " DO
     
     case "$DO" in
-        "1") installer ;;
-        "2") remove ;;
-        "3") exit 0 ;;
-        *) echo "Invalid option."; sleep 1 ;;
+        1) run_installer ;;
+        2) run_remove ;;
+        3) echo -e "${C}Até logo!${NC}"; exit 0 ;;
+        *) echo -e "${R}Opção inválida.${NC}"; sleep 0.5 ;;
     esac
 done
