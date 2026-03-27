@@ -1,44 +1,14 @@
 #!/usr/bin/env bash
 
-# --- Configurações Gerais ---
+# --- Configurações ---
 VER="1.3.5"
 LOG_FILE="$HOME/.cache/jaylog.txt"
 [[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
 
-# Cores para o Terminal (Apenas exibição)
-GREEN='\e[32m'
-RED='\e[31m'
-YELLOW='\e[33m'
-BOLD='\e[1m'
-NC='\e[0m'
-
-# --- Funções de Apoio ---
-
-# Limpa códigos ANSI (cores) de uma string
-clean_ansi() {
-    echo "$1" | sed 's/\x1b\[[0-9;]*[mGJK]//g'
-}
-
-log_action() {
-    local exit_code=$1
-    local tag=$2
-    local info=$3
-    local date_str
-    date_str=$(date "+%H:%M - %d/%m/%Y")
-
-    # Garante que o log seja sempre texto puro
-    local c_tag=$(clean_ansi "$tag")
-    local c_info=$(clean_ansi "$info")
-
-    if [[ $exit_code -eq 0 ]]; then
-        echo "($date_str) | $c_tag | $c_info" >> "$LOG_FILE"
-    else
-        echo "($date_str) | [ERROR] | $c_tag $c_info" >> "$LOG_FILE"
-    fi
-}
+# --- Interface Simples ---
 
 usage() {
-    echo -e "${YELLOW}Uso:${NC} jay [comando] [pacotes]"
+    echo "Uso: jay [comando] [pacotes]"
     exit 1
 }
 
@@ -56,53 +26,72 @@ case "$1" in
     cache)   CMD="-Sc";  TAG="[CACHE CLEAN]" ;;
     slog)
         [[ ! -s "$LOG_FILE" ]] && { echo "Log vazio."; exit 0; }
-        # Aplica cores apenas na hora de mostrar na tela
-        sed -e "s/\[INSTALLED\]/${GREEN}&${NC}/g" \
-            -e "s/\[REMOVED\]/${RED}&${NC}/g" \
-            -e "s/\[ERROR\]/${RED}${BOLD}&${NC}/g" \
-            -e "s/\[UPDATED\]/${YELLOW}&${NC}/g" "$LOG_FILE" | column -t -s '|'
+        column -t -s '|' "$LOG_FILE"
         exit 0 ;;
-    clog) > "$LOG_FILE"; echo "Logs limpos."; exit 0 ;;
-    --comp-setup) 
-        # (Sua lógica de completion aqui...)
-        echo "Completions configuradas!"; exit 0 ;;
-    -v|--version) echo "jay v$VER"; exit 0 ;;
+    clog) 
+        > "$LOG_FILE"
+        echo "Logs limpos."
+        exit 0 ;;
+    -v|--version) 
+        echo "jay v$VER"
+        exit 0 ;;
     *) usage ;;
 esac
 
-# --- Processamento de Argumentos ---
+# --- Filtro de Argumentos (Separa pacotes de flags como --noconfirm) ---
+
+ACTION="$1"
 shift
-ARGS=()
-NOCONFIRM=""
+FINAL_ARGS=()
+YAY_FLAGS=()
 
 for arg in "$@"; do
-    [[ "$arg" == "--noconfirm" || "$arg" == "-y" ]] && NOCONFIRM="--noconfirm" || ARGS+=("$arg")
+    if [[ "$arg" == -* ]]; then
+        YAY_FLAGS+=("$arg")
+    else
+        FINAL_ARGS+=("$arg")
+    fi
 done
 
-# Impede rodar comandos vazios que poluem o log
-if [[ "$1" =~ ^(install|remove)$ && ${#ARGS[@]} -eq 0 ]]; then
-    echo -e "${RED}Erro:${NC} Nenhum pacote especificado."
+# Validação para comandos de modificação
+if [[ "$ACTION" =~ ^(install|remove)$ && ${#FINAL_ARGS[@]} -eq 0 ]]; then
+    echo "Erro: Informe ao menos um pacote."
     exit 1
 fi
 
+if ! command -v yay &>/dev/null; then 
+    echo "Erro: yay não encontrado."
+    exit 1 
+fi
+
 # --- Execução Principal ---
-if ! command -v yay &>/dev/null; then echo "Erro: yay não encontrado."; exit 1; fi
 
 TMP_OUT=$(mktemp)
-yay "$CMD" "${ARGS[@]}" $NOCONFIRM 2>&1 | tee "$TMP_OUT"
+# Roda o yay normalmente
+yay "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" 2>&1 | tee "$TMP_OUT"
 EXIT_CODE=$?
 
-# --- Registro de Log ---
+# --- Registro de Log (Texto Puro) ---
+
 if [[ "$TAG" != "SKIP" ]]; then
-    PKGS_LIST=$(IFS=','; echo "${ARGS[*]}")
+    DATE_STR=$(date "+%H:%M - %d/%m/%Y")
     
-    # Tratamento especial para o 'update' pegar os nomes dos pacotes
-    if [[ "$1" == "update" && $EXIT_CODE -eq 0 ]]; then
-        PKGS_LIST=$(clean_ansi "$(cat "$TMP_OUT")" | grep -E "upgraded|atualizado" | awk '{print $3}' | tr '\n' ',' | sed 's/,$//')
+    # Se for update, tenta extrair os nomes dos pacotes da saída do yay
+    if [[ "$ACTION" == "update" && $EXIT_CODE -eq 0 ]]; then
+        # Limpa caracteres de controle ANSI que o yay solta e filtra nomes
+        PKGS_TO_LOG=$(sed 's/\x1b\[[0-9;]*[mGJK]//g' "$TMP_OUT" | grep -E "upgraded|atualizado" | awk '{print $3}' | tr '\n' ',' | sed 's/,$//')
+    else
+        # Usa apenas os pacotes da lista de argumentos (sem flags)
+        PKGS_TO_LOG=$(IFS=','; echo "${FINAL_ARGS[*]}")
     fi
 
-    # Se a lista de pacotes for vazia (ex: update sem nada), usa "SYSTEM"
-    log_action $EXIT_CODE "$TAG" "${PKGS_LIST:-SYSTEM}"
+    FINAL_TEXT="${PKGS_TO_LOG:-SYSTEM}"
+
+    if [[ $EXIT_CODE -eq 0 ]]; then
+        echo "($DATE_STR) | $TAG | $FINAL_TEXT" >> "$LOG_FILE"
+    else
+        echo "($DATE_STR) | [ERROR] | $ACTION: $FINAL_TEXT" >> "$LOG_FILE"
+    fi
 fi
 
 rm "$TMP_OUT"

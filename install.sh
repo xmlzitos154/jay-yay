@@ -8,19 +8,30 @@ R='\e[31m' # Vermelho
 B='\e[1m'  # Negrito
 NC='\e[0m' # Reset
 
-# --- Importação da Versão ---
+# --- Extração Cirúrgica da Versão ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE="$SCRIPT_DIR/main"
 
-[[ -f "$SOURCE" ]] && source "$SOURCE" || { echo -e "${R}Erro: 'main' não encontrado.${NC}"; exit 1; }
+if [[ -f "$SOURCE" ]]; then
+    # Pega a linha VER="x.x.x" do arquivo main e avalia apenas ela
+    VER_LINE=$(grep -m 1 "^VER=" "$SOURCE")
+    if [[ -n "$VER_LINE" ]]; then
+        eval "$VER_LINE"
+    else
+        VER="unk" # Caso não ache a variável
+    fi
+else
+    echo -e "${R}Erro: Arquivo 'main' não encontrado.${NC}"
+    exit 1
+fi
 
 BIN_NAME="jay"
 INSTALL_PATH="/usr/bin/$BIN_NAME"
 
 # --- Root Check ---
-[[ $EUID -ne 0 ]] && { echo -e "${Y}>>${NC} Rodando como root..."; exec sudo "$0" "$@"; }
+[[ $EUID -ne 0 ]] && { echo -e "${Y}>>${NC} Solicitando root..."; exec sudo "$0" "$@"; }
 
-# --- Interface ---
+# --- Funções de Interface ---
 
 title() {
     clear
@@ -30,23 +41,24 @@ title() {
 
 step() {
     echo -e "${C}  [..]${NC} $1"
-    sleep 0.4
+    sleep 0.3
 }
 
 success() {
     echo -e "${G}  [OK]${NC} $1"
 }
 
-# --- Funções ---
+# --- Lógica de Instalação ---
 
 run_installer() {
     title
     echo -e "${B}Instalando JAY no sistema...${NC}\n"
     
-    step "Copiando binário"
+    step "Copiando binário para $INSTALL_PATH"
     install -Dm755 "$SOURCE" "$INSTALL_PATH" && success "Binário instalado"
     
     step "Configurando completions"
+    
     # Fish
     if [ -d "/usr/share/fish/vendor_completions.d" ]; then
         cat <<EOF > "/usr/share/fish/vendor_completions.d/jay.fish"
@@ -55,23 +67,21 @@ complete -c jay -n "__fish_use_subcommand" -a "install remove refresh update sea
 EOF
         success "Fish completions"
     fi
-    
-    # [Você pode colar aqui os blocos de Bash/Zsh se usar eles também]
 
-    echo -e "\n${G}${B}Pronto!${NC} O jay já está no gatilho."
-    read -n1 -s -p "Pressione qualquer tecla..."
+    echo -e "\n${G}${B}Pronto!${NC} O jay foi atualizado."
+    read -n1 -s -p "Pressione qualquer tecla para voltar..."
+    exit 0
 }
 
 run_remove() {
     title
     echo -e "${R}${B}Removendo JAY...${NC}\n"
-    
     rm -f "$INSTALL_PATH"
     rm -f "/usr/share/fish/vendor_completions.d/jay.fish"
-    
     success "Arquivos removidos"
     echo -e "\n${Y}Sistema limpo.${NC}"
-    read -n1 -s -p "Pressione qualquer tecla..."
+    read -n1 -s -p "Pressione qualquer tecla para voltar..."
+    exit 0
 }
 
 # --- Menu ---
