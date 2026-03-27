@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# THIS TAG IS USED FOR RANDOM COMMITS (0001)
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE="$SCRIPT_DIR/main"
 
