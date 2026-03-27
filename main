@@ -1,16 +1,10 @@
 #!/usr/bin/env bash
 
-VER="1.2.2"
-
-# Verifica se o yay existe
-if ! command -v yay &>/dev/null; then
-    echo "erro: yay não está instalado."
-    exit 1
-fi
-
+VER="1.3.0"
 LOG_FILE="$HOME/.cache/jaylog.txt"
 [[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
 
+# --- Funções de Ajuda ---
 help_usage() {
     echo "jay usage: [Command] [Packages]"
     exit 1
@@ -22,94 +16,120 @@ help_msg() {
     printf "  install    (Sync apps)       |  remove     (Remove apps)\n"
     printf "  refresh    (Refresh repos)   |  update     (Update system)\n"
     printf "  search     (Search AUR/Repo) |  query      (Local search)\n"
-    printf "  cache      (Clear cache - may remove old packages)\n"
-    printf "\nLogger:\n\n"
-    printf "  slog       (Show logs)       |  clog       (Clear logs)\n"
-    printf "  help       (Show this list)\n"
+    printf "  cache      (Clear cache)     |  slog       (Show logs)\n"
+    printf "  clog       (Clear logs)      |  --setup    (Install completions)\n"
     exit 0
 }
 
-ARG="$1"
-CMD=""
-LOGGER=""
-ARGS=()
-NOCONFIRM=()
-
-# Separa as flags de noconfirm dos pacotes
-for arg in "${@:2}"; do
-    if [[ "$arg" == "--noconfirm" || "$arg" == "-y" ]]; then
-        NOCONFIRM=("--noconfirm")
-    else
-        ARGS+=("$arg")
+# --- Auto-Instalador de Completions ---
+install_completions() {
+    echo "Configurando completions para o seu shell..."
+    
+    # Fish
+    if [ -d "$HOME/.config/fish" ]; then
+        mkdir -p "$HOME/.config/fish/completions"
+        cat <<EOF > "$HOME/.config/fish/completions/jay.fish"
+complete -c jay -f
+complete -c jay -n "__fish_use_subcommand" -a "install remove refresh update search query cache slog clog help"
+complete -c jay -n "__fish_seen_subcommand_from remove query" -a "(pacman -Qq)"
+complete -c jay -n "__fish_seen_subcommand_from install search" -a "(pacman -Slq)"
+EOF
+        echo "[+] Fish completions instaladas em ~/.config/fish/completions/jay.fish"
     fi
-done
 
-[[ -z "$ARG" ]] && help_usage
+    # Zsh
+    if [ -n "$ZSH_VERSION" ] || [ -d "$HOME/.zsh" ] || [ -f "$HOME/.zshrc" ]; then
+        # Cria uma pasta local de funções se não existir e avisa o usuário
+        mkdir -p "$HOME/.zsh/completions"
+        cat <<EOF > "$HOME/.zsh/completions/_jay"
+#compdef jay
+_jay() {
+    _arguments "1: :(install remove refresh update search query cache slog clog help)" "*: :_files"
+}
+EOF
+        echo "[+] Zsh completion criada em ~/.zsh/completions/_jay"
+        echo "(!) Certifique-se de ter 'fpath=(~/.zsh/completions \$fpath)' no seu .zshrc"
+    fi
 
-case "$ARG" in
-    "install") CMD="-S";   LOGGER="[INSTALLED]" ;;
-    "remove")  CMD="-Rsn"; LOGGER="[REMOVED]"   ;;
-    "refresh") CMD="-Syy"; LOGGER="[REFRESHED]"; ARGS=() ;;
-    "update")  CMD="-Syu"; LOGGER="[UPDATED]";   ARGS=() ;;
-    "search")  CMD="-Ss";  LOGGER="[SEARCHED]"  ;;
-    "query")   CMD="-Qs";  LOGGER="[QUERIED]"   ;;
-    "cache")
+    # Bash
+    if [ -f "$HOME/.bashrc" ]; then
+        cat <<EOF > "$HOME/.jay_completion.bash"
+_jay_completions() {
+    local cur=\${COMP_WORDS[COMP_CWORD]}
+    local opts="install remove refresh update search query cache slog clog help"
+    COMPREPLY=( \$(compgen -W "\${opts}" -- \${cur}) )
+}
+complete -F _jay_completions jay
+EOF
+        if ! grep -q "jay_completion.bash" "$HOME/.bashrc"; then
+            echo "source ~/.jay_completion.bash" >> "$HOME/.bashrc"
+        fi
+        echo "[+] Bash completions configuradas no ~/.bashrc"
+    fi
+    exit 0
+}
+
+# --- Lógica de Argumentos ---
+[[ -z "$1" ]] && help_usage
+
+case "$1" in
+    --setup) install_completions ;;
+    install) CMD="-S";   LOGGER="[INSTALLED]" ;;
+    remove)  CMD="-Rsn"; LOGGER="[REMOVED]"   ;;
+    refresh) CMD="-Syy"; LOGGER="[REFRESHED]"; ARGS=() ;;
+    update)  CMD="-Syu"; LOGGER="[UPDATED]";   ARGS=() ;;
+    search)  CMD="-Ss";  LOGGER="[SEARCHED]"  ;;
+    query)   CMD="-Qs";  LOGGER="[QUERIED]"   ;;
+    cache)
         read -rp "Limpar cache? [y/N]: " confirm
         [[ $confirm =~ ^[Yy]$ ]] || exit 0
-        CMD="-Sc"; LOGGER="[CACHE CLEAN]"; ARGS=()
-        ;;
-    "slog")
+        CMD="-Sc"; LOGGER="[CACHE CLEAN]"; ARGS=() ;;
+    slog)
         [[ ! -s "$LOG_FILE" ]] && { echo "Nenhum log encontrado."; exit 0; }
         sed -e 's/\[INSTALLED\]/\x1b[32m&\x1b[0m/' \
             -e 's/\[REMOVED\]/\x1b[31m&\x1b[0m/' \
             -e 's/\[ERROR\]/\x1b[41;37m&\x1b[0m/' "$LOG_FILE" | column -t -s '|'
-        exit 0
-        ;;
-    "clog") > "$LOG_FILE"; echo "Logs limpos."; exit 0 ;;
+        exit 0 ;;
+    clog) > "$LOG_FILE"; echo "Logs limpos."; exit 0 ;;
     --help|-h|help) help_msg ;;
-    ver|--version|-v) printf "\n JAY version: %s \n\n" "$VER"; exit 0 ;;
     *) help_usage ;;
 esac
 
-# Validações de argumentos vazios
-if [[ "$ARG" =~ ^(install|remove)$ ]] && [[ ${#ARGS[@]} -eq 0 ]]; then
-    echo "Nenhum programa especificado."
-    exit 1
-fi
-if [[ "$ARG" =~ ^(search|query)$ ]] && [[ ${#ARGS[@]} -eq 0 ]]; then
-    echo "Informe um termo para busca."
+# Separa pacotes de flags
+shift
+ARGS=()
+NOCONFIRM=()
+for arg in "$@"; do
+    [[ "$arg" == "--noconfirm" || "$arg" == "-y" ]] && NOCONFIRM=("--noconfirm") || ARGS+=("$arg")
+done
+
+# Validações rápidas
+if [[ "$1" =~ ^(install|remove|search|query)$ ]] && [[ ${#ARGS[@]} -eq 0 ]]; then
+    echo "Erro: faltou o nome do pacote ou termo de busca."
     exit 1
 fi
 
-# --- Execução Principal ---
+# --- Execução ---
+if ! command -v yay &>/dev/null; then echo "Erro: yay não instalado."; exit 1; fi
+
 TMP_LOG=$(mktemp)
 PKGS=$(IFS=','; echo "${ARGS[*]}")
 
-# Roda o yay mostrando na tela e salvando no arquivo temporário
 yay "$CMD" "${ARGS[@]}" "${NOCONFIRM[@]}" 2>&1 | tee "$TMP_LOG"
 STATUS=$?
 
-# --- Lógica de Log ---
+# --- Log ---
 LOG_DATE="$(date "+%H:%M - %d/%m/%Y")"
-
 if [[ $STATUS -eq 0 ]]; then
-    # Se for update, tenta pescar o que foi atualizado
-    if [[ "$ARG" == "update" ]]; then
-        # Remove cores ANSI, busca 'upgraded', pega a 3ª coluna e junta com vírgulas
-        UPDATED_LIST=$(sed 's/\x1b\[[0-9;]*m//g' "$TMP_LOG" | grep "upgraded" | awk '{print $3}' | paste -sd "," -)
+    if [[ "$1" == "update" ]]; then
+        UPDATED_LIST=$(sed 's/\x1b\[[0-9;]*[mGJK]//g' "$TMP_LOG" | grep -E "upgraded|atualizado" | awk '{print $3}' | tr '\n' ',' | sed 's/,$//')
         FINAL_PKGS="${UPDATED_LIST:-SYSTEM (no changes)}"
     else
         FINAL_PKGS="${PKGS:-SYSTEM}"
     fi
-
-    # Só loga se não for busca/query
-    if [[ ! "$ARG" =~ ^(search|query)$ ]]; then
-        echo "($LOG_DATE)|$LOGGER|$FINAL_PKGS" >> "$LOG_FILE"
-    fi
+    [[ ! "$1" =~ ^(search|query)$ ]] && echo "($LOG_DATE)|$LOGGER|$FINAL_PKGS" >> "$LOG_FILE"
 else
-    # Log de erro
-    echo "($LOG_DATE)|[ERROR]|$ARG ${PKGS:-SYSTEM}" >> "$LOG_FILE"
-    echo -e "\n\e[31m[!] ERRO ao executar: jay $ARG\e[0m"
+    echo "($LOG_DATE)|[ERROR]|$1 ${PKGS:-SYSTEM}" >> "$LOG_FILE"
 fi
 
 rm "$TMP_LOG"
