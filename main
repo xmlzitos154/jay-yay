@@ -1,31 +1,34 @@
 #!/usr/bin/env bash
 
-VER="1.3.0"
+VER="1.3"
 LOG_FILE="$HOME/.cache/jaylog.txt"
 [[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
 
-# --- Funções de Ajuda ---
 help_usage() {
     echo "jay usage: [Command] [Packages]"
     exit 1
 }
 
+display_version() {
+    echo -e "\n -> jay (JUST ANOTHER YOGOURT) - Version $VER\n"
+    exit 0
+}
+
 help_msg() {
-    printf "JAY - a simple yay wrapper. version: %s\n" "$VER"
-    printf "Commands:\n\n"
+    printf "\nJAY - a simple yay wrapper. version: %s\n" "$VER"
+    printf "\nCommands:\n\n"
     printf "  install    (Sync apps)       |  remove     (Remove apps)\n"
     printf "  refresh    (Refresh repos)   |  update     (Update system)\n"
     printf "  search     (Search AUR/Repo) |  query      (Local search)\n"
     printf "  cache      (Clear cache)     |  slog       (Show logs)\n"
-    printf "  clog       (Clear logs)      |  --setup    (Install completions)\n"
+    printf "  clog       (Clear logs)      |  --comp-setup    (Install completions)\n"
+    echo -e ""
     exit 0
 }
 
-# --- Auto-Instalador de Completions ---
 install_completions() {
     echo "Configurando completions para o seu shell..."
     
-    # Fish
     if [ -d "$HOME/.config/fish" ]; then
         mkdir -p "$HOME/.config/fish/completions"
         cat <<EOF > "$HOME/.config/fish/completions/jay.fish"
@@ -37,9 +40,7 @@ EOF
         echo "[+] Fish completions instaladas em ~/.config/fish/completions/jay.fish"
     fi
 
-    # Zsh
     if [ -n "$ZSH_VERSION" ] || [ -d "$HOME/.zsh" ] || [ -f "$HOME/.zshrc" ]; then
-        # Cria uma pasta local de funções se não existir e avisa o usuário
         mkdir -p "$HOME/.zsh/completions"
         cat <<EOF > "$HOME/.zsh/completions/_jay"
 #compdef jay
@@ -51,7 +52,6 @@ EOF
         echo "(!) Certifique-se de ter 'fpath=(~/.zsh/completions \$fpath)' no seu .zshrc"
     fi
 
-    # Bash
     if [ -f "$HOME/.bashrc" ]; then
         cat <<EOF > "$HOME/.jay_completion.bash"
 _jay_completions() {
@@ -69,11 +69,11 @@ EOF
     exit 0
 }
 
-# --- Lógica de Argumentos ---
 [[ -z "$1" ]] && help_usage
 
 case "$1" in
-    --setup) install_completions ;;
+    --comp-setup) install_completions ;;
+    -v|--version) display_version ;;
     install) CMD="-S";   LOGGER="[INSTALLED]" ;;
     remove)  CMD="-Rsn"; LOGGER="[REMOVED]"   ;;
     refresh) CMD="-Syy"; LOGGER="[REFRESHED]"; ARGS=() ;;
@@ -95,7 +95,6 @@ case "$1" in
     *) help_usage ;;
 esac
 
-# Separa pacotes de flags
 shift
 ARGS=()
 NOCONFIRM=()
@@ -103,13 +102,11 @@ for arg in "$@"; do
     [[ "$arg" == "--noconfirm" || "$arg" == "-y" ]] && NOCONFIRM=("--noconfirm") || ARGS+=("$arg")
 done
 
-# Validações rápidas
 if [[ "$1" =~ ^(install|remove|search|query)$ ]] && [[ ${#ARGS[@]} -eq 0 ]]; then
     echo "Erro: faltou o nome do pacote ou termo de busca."
     exit 1
 fi
 
-# --- Execução ---
 if ! command -v yay &>/dev/null; then echo "Erro: yay não instalado."; exit 1; fi
 
 TMP_LOG=$(mktemp)
@@ -118,8 +115,8 @@ PKGS=$(IFS=','; echo "${ARGS[*]}")
 yay "$CMD" "${ARGS[@]}" "${NOCONFIRM[@]}" 2>&1 | tee "$TMP_LOG"
 STATUS=$?
 
-# --- Log ---
 LOG_DATE="$(date "+%H:%M - %d/%m/%Y")"
+
 if [[ $STATUS -eq 0 ]]; then
     if [[ "$1" == "update" ]]; then
         UPDATED_LIST=$(sed 's/\x1b\[[0-9;]*[mGJK]//g' "$TMP_LOG" | grep -E "upgraded|atualizado" | awk '{print $3}' | tr '\n' ',' | sed 's/,$//')
