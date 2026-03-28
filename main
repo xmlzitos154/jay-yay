@@ -10,7 +10,7 @@ jay_version() {
 }
 
 help_message() {
-    echo -e "\n -> JAY (Just Another Yogourt) - Version $VER \n"
+    jay_version
     echo -e "Uso: jay [comando] [pacotes]\n"
     echo -e "Options: \n"
     echo -e "-h, --help          Mostra essa mensagem"
@@ -28,7 +28,7 @@ help_message() {
 }
 
 usage() {
-    echo "Uso: jay [comando] [pacotes]"
+    echo "Uso: jay <comando> <pacotes>"
     exit 1
 }
 
@@ -46,6 +46,7 @@ clear_log() {
 [[ -z "$1" ]] && usage
 
 case "$1" in
+    "-") echo "argumento invalido '-'" && exit 0 ;;
     install|-i|-S) CMD="-S";   TAG="[INSTALLED]" ;;
     remove|-rm)  CMD="-Rsn"; TAG="[REMOVED]"   ;;
     refresh|-r) CMD="-Syy"; TAG="[REFRESHED]" ;;
@@ -56,8 +57,7 @@ case "$1" in
     slog|-sl) show_log ;;
     clog|-cl) clear_log ;;
     -v|--version)
-        jay_version
-    exit 0 ;;
+    jay_version ; exit 0 ;;
     -h|--help) help_message ;;
     *) echo -n "-> " && echo "argumento invalido '$1'" | tr -d "-" ; exit 0 ;;
 esac
@@ -91,8 +91,9 @@ EXIT_CODE=$?
 
 if [[ "$TAG" != "SKIP" ]]; then
     DATE_STR=$(date "+%H:%M - %d/%m/%Y")
-
-    if [[ "$ACTION" == "update" && $EXIT_CODE -eq 0 ]]; then
+    
+    
+    if [[ "$TAG" == "[UPDATED]" && $EXIT_CODE -eq 0 ]]; then
         PKGS_TO_LOG=$(sed 's/\x1b\[[0-9;]*[mGJK]//g' "$TMP_OUT" | grep -E "upgraded|atualizado" | awk '{print $3}' | tr '\n' ',' | sed 's/,$//')
     else
         PKGS_TO_LOG=$(IFS=','; echo "${FINAL_ARGS[*]}")
