@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
-VER="1.3.7"
+VER="1.4.2"
 LOG_FILE="$HOME/.cache/jaylog.txt"
 [[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
-
 
 jay_version() {
     echo -e "\n -> JAY (Just Another Yogourt) - Version $VER \n"
@@ -11,18 +10,20 @@ jay_version() {
 
 help_message() {
     jay_version
-    echo -e "Uso: jay [comando] [pacotes]\n"
+    echo -e "Uso: jay [comando] [opções] [pacotes]"
+    echo -e "Uso: jay [-i -f | -i --flatpak]\n"
     echo -e "Options: \n"
     echo -e "-h, --help          Mostra essa mensagem"
-    echo -e "-i, install         Sicronizar pacotes"
+    echo -e "-i, install         Sincronizar pacotes"
     echo -e "-rm, remove         Remover pacotes"
     echo -e "-s, search          Pesquisar pacotes"
     echo -e "-c, cache           Limpar todo cache"
     echo -e "-q, query           Procurar pacotes locais"
     echo -e "-sl, slog           Mostrar histórico de comandos"
     echo -e "-cl, clog           Limpar o arquivo de histórico"
-    echo -e "-u, update          Atualizar o sistema (pacotes e repositórios)"
+    echo -e "-u, update          Atualizar o sistema (AUR + Flatpak se -f)"
     echo -e "-r, refresh         Atualizar repositórios"
+    echo -e "-f, --flatpak       Modo híbrido ou update duplo"
     echo -e ""
     exit 0
 }
@@ -37,6 +38,7 @@ show_log() {
     column -t -s '|' "$LOG_FILE"
     exit 0
 }
+
 clear_log() {
     > "$LOG_FILE"
     echo "Logs limpos."
@@ -45,30 +47,34 @@ clear_log() {
 
 [[ -z "$1" ]] && usage
 
+USE_FLATPAK=false
+
 case "$1" in
     "-") echo "argumento invalido '-'" && exit 0 ;;
-    install|-i|-S) CMD="-S";   TAG="[INSTALLED]" ;;
-    remove|-rm)  CMD="-Rsn"; TAG="[REMOVED]"   ;;
-    refresh|-r) CMD="-Syy"; TAG="[REFRESHED]" ;;
-    update|-u)  CMD="-Syu"; TAG="[UPDATED]"   ;;
-    search|-s)  CMD="-Ss";  TAG="SKIP"        ;;
-    query|-q)   CMD="-Qs";  TAG="SKIP"        ;;
-    cache|-c)   CMD="-Sc";  TAG="[CACHE CLEAN]" ;;
-    slog|-sl) show_log ;;
-    clog|-cl) clear_log ;;
-    -v|--version)
-    jay_version ; exit 0 ;;
-    -h|--help) help_message ;;
+    install|-i|-S) CMD="-S";   TAG="[INSTALLED]"; FLAT_CMD="install flathub" ;;
+    remove|-rm)    CMD="-Rsn"; TAG="[REMOVED]";   FLAT_CMD="uninstall" ;;
+    refresh|-r)    CMD="-Syy"; TAG="[REFRESHED]" ;;
+    update|-u)     CMD="-Syu"; TAG="[UPDATED]";   FLAT_CMD="update" ;;
+    search|-s)     CMD="-Ss";  TAG="SKIP"        ;;
+    query|-q)      CMD="-Qs";  TAG="SKIP"        ;;
+    cache|-c)      CMD="-Sc";  TAG="[CACHE CLEAN]" ;;
+    slog|-sl)      show_log ;;
+    clog|-cl)      clear_log ;;
+    -v|--version)  jay_version ; exit 0 ;;
+    -h|--help)     help_message ;;
     *) echo -n "-> " && echo "argumento invalido '$1'" | tr -d "-" ; exit 0 ;;
 esac
 
 ACTION="$1"
 shift
+
 FINAL_ARGS=()
 YAY_FLAGS=()
 
 for arg in "$@"; do
-    if [[ "$arg" == -* ]]; then
+    if [[ "$arg" == "-f" || "$arg" == "--flatpak" ]]; then
+        USE_FLATPAK=true
+    elif [[ "$arg" == -* ]]; then
         YAY_FLAGS+=("$arg")
     else
         FINAL_ARGS+=("$arg")
@@ -85,22 +91,44 @@ if ! command -v yay &>/dev/null; then
     exit 1
 fi
 
+[[ "$USE_FLATPAK" == "true" ]] && FLAT_FLAGS="-y" || FLAT_FLAGS=""
+
 TMP_OUT=$(mktemp)
+
+echo -e "-> Iniciando processo via AUR...\n"
 yay "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" 2>&1 | tee "$TMP_OUT"
 EXIT_CODE=$?
+
+if [[ "$USE_FLATPAK" == "true" ]]; then
+    if [[ "$ACTION" == "update" || "$ACTION" == "-u" ]]; then
+        echo -e "\n-> Atualizando Flatpaks...\n"
+        if command -v flatpak &>/dev/null; then
+            flatpak update $FLAT_FLAGS
+        fi
+    elif [[ $EXIT_CODE -ne 0 ]] || grep -qiE "Nenhum pacote AUR localizado|não há nada a ser feito|target not found" "$TMP_OUT"; then
+        echo -e "\n[!] AUR não encontrou nada. Pulando para Flatpak...\n"
+        if command -v flatpak &>/dev/null; then
+            flatpak $FLAT_CMD $FLAT_FLAGS "${FINAL_ARGS[@]}"
+            EXIT_CODE=$?
+            if [[ $EXIT_CODE -eq 0 ]]; then
+                [[ "$FLAT_CMD" == "uninstall" ]] && TAG="[RM FLATPAK]" || TAG="[FLATPAK]"
+                PKGS_TO_LOG="${FINAL_ARGS[*]}"
+            fi
+        fi
+    fi
+fi
 
 if [[ "$TAG" != "SKIP" ]]; then
     DATE_STR=$(date "+%H:%M - %d/%m/%Y")
     
-    
-    if [[ "$TAG" == "[UPDATED]" && $EXIT_CODE -eq 0 ]]; then
+    if [[ "$CMD" == "-Syu" && $EXIT_CODE -eq 0 ]]; then
         PKGS_TO_LOG=$(sed 's/\x1b\[[0-9;]*[mGJK]//g' "$TMP_OUT" | grep -E "upgraded|atualizado" | awk '{print $3}' | tr '\n' ',' | sed 's/,$//')
     else
         PKGS_TO_LOG=$(IFS=','; echo "${FINAL_ARGS[*]}")
     fi
-    
+
     FINAL_TEXT="${PKGS_TO_LOG:-SYSTEM}"
-    
+
     if [[ $EXIT_CODE -eq 0 ]]; then
         echo "($DATE_STR) | $TAG | $FINAL_TEXT" >> "$LOG_FILE"
     else
