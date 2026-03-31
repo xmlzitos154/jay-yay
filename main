@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER="2.0"
+VER="2.1 (Yogourt)"
 
 REAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
 REAL_HOME=${REAL_HOME:-$HOME}
@@ -71,9 +71,17 @@ help_message() {
     echo -e "-h,  --help         Mostra essa mensagem"
     echo -e "-i,  install        Sincronizar pacotes"
     echo -e "-rm, remove         Remover pacotes (Use '-A' para modo Agressivo)"
-    echo -e "-s,  search         Pesquisar pacotes"
     echo -e "-u,  update         Atualizar o sistema"
-    echo -e "-o,  orphan         Remove dependências inúteis"
+    if [[ "$MOD_2" != "0" ]]; then
+        echo -e "-s,  search         Pesquisa pacotes no AUR"
+        echo -e "-q,  query          Pesquisa pacotes locais"
+    fi
+    if [[ "$MOD_3" != "0" ]]; then
+        echo -e "-o,  orphan         Remove dependências inúteis"
+    fi
+    if [[ "$MOD_1" != "0" ]]; then
+        echo -e "-c,  cache          Limpa todo o cache do pacman"
+    fi
     exit 0
 }
 
@@ -133,8 +141,8 @@ case "$1" in
         fi
     ;;
     slog|-sl)
-        [[ ! -s "$LOG_FILE" ]] &&  echo "Log vazio." && exit 0
-        column -t -s '|' "$LOG_FILE" 
+        [[ ! -s "$LOG_FILE" ]] && echo "Log vazio." && exit 0
+        column -t -s '|' "$LOG_FILE"
         exit 0
     ;;
     clog|-cl)
