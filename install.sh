@@ -59,11 +59,13 @@ new_installer() {
     step "Criando pasta de configs..."
     mkdir -p "$CONFIG_DIRECTORY"
     cd  "$CONFIG_DIRECTORY"
-    step "Carregando módulos..."
+    step "Carregando módulos basicos..."
     [[ -d "modules" ]] && rm -rf "modules"
     mkdir "modules"
     [[ ! -f "$SCRIPT_DIR/modules/base" ]] && echo -e "${R}erro: modulo base não encontrado.${NC}" && exit 1
+    [[ ! -f "$SCRIPT_DIR/modules/log" ]] && echo -e "${R}erro: modulo log não encontrado.${NC}" && exit 1
     cp -r "$SCRIPT_DIR/modules/base" "$CONFIG_DIRECTORY/modules/"
+    cp -r "$SCRIPT_DIR/modules/log" "$CONFIG_DIRECTORY/modules/"
     success "Pronto."
     installer_part2
 }
