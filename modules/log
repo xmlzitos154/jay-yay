@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+show_logs() {
+    [[ ! -s "$LOG_FILE" ]] && echo "Log vazio." && exit 0
+    column -t -s '|' "$LOG_FILE"
+    exit 0
+}
+
+clear_logs() {
+    > "$LOG_FILE"
+    success "Logs limpos."
+    exit 0
+}
