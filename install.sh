@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # --- Configurações de Cores ---
 G='\e[32m' # Verde
@@ -49,16 +49,42 @@ success() {
 
 # --- Lógica de Instalação ---
 
-run_installer() {
+new_installer() {
     title
-    echo -e "${B}Instalando JAY no sistema...${NC}\n"
-    
-    step "Copiando binário para $INSTALL_PATH"
-    install -Dm755 "$SOURCE" "$INSTALL_PATH" && success "Binário instalado"
-    
+    step "Copiando arquivos necessários..."
+    install -Dm755 "$SOURCE" "$INSTALL_PATH"
+    success "Pronto."
+    step "Criando pasta de configs..."
+    CONFIG_DIRECTORY="/home/$(logname)/.config/jay"
+    mkdir -p "$CONFIG_DIRECTORY"
+    cd  "$CONFIG_DIRECTORY"
+    step "Carregando módulos..."
+    [[ -d "modules" ]] && rm -rf "modules"
+    mkdir "modules"
+    [[ ! -f "$SCRIPT_DIR/modules/base" ]] && echo -e "${R}erro: modulo base não encontrado.${NC}" && exit 1
+    cp -r "$SCRIPT_DIR/modules/base" "$CONFIG_DIRECTORY/modules/"
+    success "Pronto."
+    installer_part2
+}
+installer_part2() {
+    echo "Que modulos deseja instalar?"
+    echo ""
+    echo "1. cache (Limpa o cache)"
+    echo "2. search (search e query do yay)"
+    echo "3. extra (Varias outras funções)"
+    echo "4. todos"
+    echo "5. nenhum"
+    echo ""
+    read -p " > " MODS
+    case "$MODS" in
+        "1") cp -r "$SCRIPT_DIR/modules/cache" "$CONFIG_DIRECTORY/modules" ;;
+        "2") cp -r "$SCRIPT_DIR/modules/search" "$CONFIG_DIRECTORY/modules" ;;
+        "3") cp -r "$SCRIPT_DIR/modules/extra" "$CONFIG_DIRECTORY/modules" ;;
+        "4") cp -r "$SCRIPT_DIR/modules/." "$CONFIG_DIRECTORY/modules" ;;
+        *) echo "modulo não existe." ;;
+    esac
     step "Configurando completions"
     
-    # Fish
     if [ -d "/usr/share/fish/vendor_completions.d" ]; then
         cat <<EOF > "/usr/share/fish/vendor_completions.d/jay.fish"
 complete -c jay -f
@@ -74,8 +100,9 @@ complete -c jay -s cl -l clog -d "Limpar histórico"
 EOF
         success "Fish completions (orphan adicionado)"
     fi
-
-    echo -e "\n${G}${B}Pronto!${NC} O jay foi atualizado."
+    chown -R $(logname):$(logname) "$CONFIG_DIRECTORY"
+    success "Permissões ajustadas."
+    echo -e "\n${G}${B}Pronto!${NC} O jay foi instalado."
     read -n1 -s -p "Pressione qualquer tecla para voltar..."
     exit 0
 }
@@ -101,7 +128,7 @@ while true; do
     read -p " > " DO
     
     case "$DO" in
-        1) run_installer ;;
+        1) new_installer ;;
         2) run_remove ;;
         3) echo -e "${C}Até logo!${NC}"; exit 0 ;;
         *) echo -e "${R}Opção inválida.${NC}"; sleep 0.5 ;;
