@@ -99,17 +99,49 @@ usage() {
 }
 
 [[ -z "$1" ]] && usage
-
 RAW_CMD="$*"
+ACTION="$1"
+shift
+
 USE_FLATPAK=false
 AGRESSIVE_MODE=false
+FINAL_ARGS=()
+YAY_FLAGS=()
 
-if [[ "$1" == "-f" || "$1" == "--flatpak" ]]; then
-    USE_FLATPAK=true
-    shift
-fi
+for arg in "$@"; do
+    if [[ "$arg" == "--list-aur" ]]; then
+        if [[ "$ACTION" =~ ^(query|-q)$ ]]; then
+            if [[ "$MOD_3" != "0" ]]; then
+                list_aur
+                exit 0
+            else
+                echo -e "$WARNING Modulo 'extra' necessario."
+                exit 1
+            fi
+        fi
+    elif [[ "$arg" == "-f" || "$arg" == "--flatpak" ]]; then
+        USE_FLATPAK=true
+    elif [[ "$arg" == "-A" ]]; then
+        if [[ "$ACTION" =~ ^(remove|-rm)$ ]]; then
+            AGRESSIVE_MODE=true
+            CMD="-Rsn"
+            TAG="[REMOVED-AGRESSIVE]"
+        fi
+    elif [[ "$arg" == "--kill-dblck" ]]; then
+        if [[ -f /var/lib/pacman/db.lck ]]; then
+            step "Removendo trava do banco de dados..."
+            sudo rm /var/lib/pacman/db.lck && success "Trava removida."
+        else
+            echo "$WARNING Nenhuma trava de banco de dados encontrada."
+        fi
+    elif [[ "$arg" == -* ]]; then
+        YAY_FLAGS+=("$arg")
+    else
+        FINAL_ARGS+=("$arg")
+    fi
+done
 
-case "$1" in
+case "$ACTION" in
     "-") msg02 ;;
     install|-i|-S) ins ;;
     remove|-rm) rmv ;;
@@ -118,84 +150,27 @@ case "$1" in
     slog|-sl) show_logs ;;
     clog|-cl) clear_logs ;;
     search|-s)
-        if [[ "$MOD_2" == "0" ]]; then
-            echo "$WARNING Não foi possivel carregar o módulo search."
-            exit 1
-        else
-            searcher
-        fi
+        [[ "$MOD_2" == "0" ]] && { echo "$WARNING Módulo search não carregado."; exit 1; } || searcher
     ;;
     query|-q)
-        if [[ "$MOD_2" == "0" ]]; then
-            echo "$WARNING Não foi possivel carregar o módulo search."
-            exit 1
-        else
-            query
-        fi
+        [[ "$MOD_2" == "0" ]] && { echo "$WARNING Módulo search não carregado."; exit 1; } || query
     ;;
     cache|-c)
-        if [[ "$MOD_1" == "0" ]]; then
-            echo "$WARNING Não foi possivel carregar o módulo cache."
-            exit 1
-        else
-            clr_cache
-        fi
+        [[ "$MOD_1" == "0" ]] && { echo "$WARNING Módulo cache não carregado."; exit 1; } || clr_cache
     ;;
     orphan|-o)
-        if [[ "$MOD_3" = "0" ]]; then
-            echo "$WARNING Não foi possivel carregar o módulo extra."
-            exit 1
-        else
-            remove_orphans
-        fi
+        [[ "$MOD_3" == "0" ]] && { echo "$WARNING Módulo extra não carregado."; exit 1; } || remove_orphans
     ;;
     -m|mirrors)
-        if [[ "$MOD_3" = "0" ]]; then
-            echo "$WARNING Não foi possivel carregar o módulo extra."
-            exit 1
-        else
-            refresh_mirrors
-        fi
+        [[ "$MOD_3" == "0" ]] && { echo "$WARNING Módulo extra não carregado."; exit 1; } || refresh_mirrors
     ;;
     -v|--version) msg03; exit 0 ;;
     -h|--help) help_message ;;
     *)
-        VAR="$1"
+        VAR="$ACTION"
         msg01
     ;;
 esac
-
-ACTION="$1"
-shift
-
-FINAL_ARGS=()
-YAY_FLAGS=()
-
-for arg in "$@"; do
-    if [[ "$arg" == "--list-aur" ]] && [[ "$ACTION" =~ ^(query|-q)$ ]]; then
-        [[ "$MOD_3" != "0" ]] && list_aur || echo "Modulo 'extra' necessario para --aur-only"
-    fi
-    if [[ "$arg" == "-f" || "$arg" == "--flatpak" ]]; then
-        USE_FLATPAK=true
-        elif [[ "$arg" == "-A" ]]; then
-        if [[ "$ACTION" =~ ^(remove|-rm)$ ]]; then
-            AGRESSIVE_MODE=true
-            CMD="-Rsn"
-            TAG="[REMOVED-AGRESSIVE]"
-        fi
-        elif [[ "$arg" == "--kill-dblck" ]]; then
-        if [[ -f /var/lib/pacman/db.lck ]]; then
-            step "Removendo trava do banco de dados..."
-            sudo rm /var/lib/pacman/db.lck && success "Trava removida."
-        else
-            echo "$WARNING Nenhuma trava de banco de dados encontrada."
-        fi
-        elif [[ "$arg" == -* ]]; then
-        YAY_FLAGS+=("$arg")
-    else
-        FINAL_ARGS+=("$arg")
-    fi
-done
 
 if [[ "$ACTION" =~ ^(install|remove|-i|-rm)$ && ${#FINAL_ARGS[@]} -eq 0 ]]; then
     error "Informe ao menos um pacote."

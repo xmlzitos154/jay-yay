@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
 list_aur() {
-    CMD="-Qm"
+    step "Filtrando pacotes instalados via AUR..."
+    pacman -Qm | column -t
     TAG="[LOCAL_QUERY (AUR)]"
+    local count=$(yay -Qm | wc -l)
+    echo -e "\n${GREEN}$OK${NC} Total de $count pacotes AUR encontrados."
 }
-
 refresh_mirrors() {
     tester
     echo "$WARNING Procurando mirrors..."

@@ -9,4 +9,5 @@ searcher() {
 query() {
     CMD="-Qs"
     TAG="[LOCAL_QUERY]"
+    local count=$(yay -Qs | wc -l)
 }
