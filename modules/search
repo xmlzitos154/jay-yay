@@ -19,6 +19,6 @@ check_updates() {
         exit 0
     fi
     echo -e "${YELLOW} $WARNING $UPDS Atualizações encontradas: ${NC}"
-    checkupdates
-    TAG="[CHECK-UPDATES]"
+    echo " $(checkupdates)"
+    exit 1
 }
