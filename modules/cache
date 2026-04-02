@@ -1,7 +1,19 @@
 #!/usr/bin/env bash
 
 clr_cache() {
-    CMD="-Sc"
+    if [[ -d "$REAL_HOME/.cache/yay" ]]; then
+        step "Limpando builds do AUR..."
+        find "$REAL_HOME/.cache/yay" -maxdepth 1 -type d -not -path "$REAL_HOME/.cache/yay" -exec rm -rf {} +
+        echo -e "${GREEN} $OK ${NC}"
+    fi
+    if command -v flatpak &>/dev/null; then
+        step "Limpando sobra de Flatpaks..."
+        flatpak uninstall --unused -y &>/dev/null
+        echo -e "${GREEN} $OK ${NC}"
+    fi
+
+    step "Limpando cache do pacman..."
+    CMD="-Scc"
     TAG="[CLEANED CACHE]"
 }
 
@@ -16,10 +28,29 @@ remove_orphans() {
             success "Órfãos removidos com sucesso."
             logger "[ORPHAN REMOVED]" "ALL_ORPHANS"
         else
-            error "Falha ao remover órfãos."
+            error "Falha ao remover órfãos"
         fi
     else
-        success "Nenhum pacote órfão encontrado."
+        success "Nenhum pacote órfão encontrado"
     fi
     exit 0
+}
+
+check_conf() {
+    step "Buscando arquivos .pacnew/.pacsave..."
+    PACNEWS=$(find /etc -regextype posix-extended -regex ".+\.pac(new|save)" 2>/dev/null)
+
+    if [[ -z "$PACNEWS" ]]; then
+        success "Tudo limpo! Nenhum conflito em /etc."
+    else
+        echo -e "${YELLOW} $WARNING Arquivos pendentes encontrados:${NC}"
+        echo "$PACNEWS"
+        echo -e "\n${CYAN} $CONTINUE ${NC}Mesclar agora com pacdiff? [y/N]"
+        read -r -n 1 opt
+        echo
+        if [[ "$opt" =~ ^(y|Y)$ ]]; then
+            sudo pacdiff
+        fi
+    fi
+    TAG="[CLEAR DIFFS]"
 }

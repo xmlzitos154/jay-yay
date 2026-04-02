@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER="2.7.2 (Yogourt)"
+VER="2.8 (Yogourt)"
 
 REAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
 REAL_HOME=${REAL_HOME:-$HOME}
@@ -68,7 +68,7 @@ help_message() {
     echo -e "Uso: jay [comando] [opções] [pacotes]"
     echo -e "Uso: jay [ -i | -rm | -s | -u ] [ -f | --flatpak ] [ --noconfirm ]"
     echo -e "Uso: jay [ -q | query ] [ --list-aur ]"
-    echo -e "Options: \n"
+    echo -e "Options: \n"\
     echo -e "-h,  --help         Mostra essa mensagem"
     echo -e "-i,  install        Sincronizar pacotes"
     echo -e "-rm, remove         Remover pacotes (Use '-A' para modo Agressivo)"
@@ -80,6 +80,7 @@ help_message() {
     if [[ "$MOD_1" != "false" ]]; then
         echo -e "-o,  orphan         Remove dependências inúteis"
         echo -e "-c,  cache          Limpa todo o cache do pacman"
+        echo -e "-d,  --diff         Gerencia arquivos .pacnew/.pacsave"
     fi
     if [[ "$MOD_3" != "false" ]]; then
         echo -e "-m, mirrors         Procura repositorios velozes"
@@ -101,22 +102,22 @@ USE_FLATPAK=false ; AGRESSIVE_MODE=false ; FINAL_ARGS=() ; YAY_FLAGS=() ; ACTION
 
 for arg in "$@"; do
     case "$arg" in
-        install|-i|-S|remove|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|refresh|-r|slog|-sl|clog|-cl|modules|-M|-v|--version|-h|--help|--check-updates)
-            [[ -z "$ACTION" ]] && ACTION="$arg" || FINAL_ARGS+=("$arg") ;;
+        install|-i|-S|remove|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|refresh|-r|slog|-sl|clog|-cl|modules|-M|-v|--version|-h|--help|--check-updates|--diff)
+        [[ -z "$ACTION" ]] && ACTION="$arg" || FINAL_ARGS+=("$arg") ;;
         -f|--flatpak)
-            USE_FLATPAK=true ;;
+        USE_FLATPAK=true ;;
         -A)
-            AGRESSIVE_MODE=true ;;
+        AGRESSIVE_MODE=true ;;
         --kill-dblck)
             if [[ -f /var/lib/pacman/db.lck ]]; then
                 sudo rm /var/lib/pacman/db.lck && success "Trava removida."
-            fi ;;
+        fi ;;
         --list-aur)
-            [[ "$ACTION" =~ ^(query|-q)$ ]] && { [[ "$MOD_3" != "false" ]] && list_aur && exit 0 || error "Módulo extra necessário."; } ;;
+        [[ "$ACTION" =~ ^(query|-q)$ ]] && { [[ "$MOD_3" != "false" ]] && list_aur && exit 0 || error "Módulo extra necessário."; } ;;
         -*)
-            YAY_FLAGS+=("$arg") ;;
+        YAY_FLAGS+=("$arg") ;;
         *)
-            FINAL_ARGS+=("$arg") ;;
+        FINAL_ARGS+=("$arg") ;;
     esac
 done
 
@@ -131,6 +132,7 @@ case "$ACTION" in
     slog|-sl) show_logs ; exit 0 ;;
     clog|-cl) clear_logs ; exit 0 ;;
     modules|-M) query_modules ;;
+    --diff|-d) [[ "$MOD_1" == "false" ]] && error "Módulo cache necessário." || { check_conf ; exit 0; } ;;
     search|-s) [[ "$MOD_2" == "false" ]] && error "Módulo search necessário." || { searcher "${FINAL_ARGS[@]}"; exit 0; } ;;
     query|-q) [[ "$MOD_2" == "false" ]] && error "Módulo search necessário." || { query "${FINAL_ARGS[@]}"; exit 0; } ;;
     cache|-c) [[ "$MOD_1" == "false" ]] && error "Módulo cache necessário." || { clr_cache ; exit 0; } ;;
@@ -157,7 +159,7 @@ if [[ "$USE_FLATPAK" == "true" ]]; then
     if [[ "$ACTION" =~ ^(update|-u)$ ]]; then
         step "Atualizando Flatpaks..."
         flatpak update -y
-    elif [[ $EXIT_CODE -ne 0 ]] || grep -qiE "Nenhum pacote|não há nada|target not found" "$TMP_OUT"; then
+        elif [[ $EXIT_CODE -ne 0 ]] || grep -qiE "Nenhum pacote|não há nada|target not found" "$TMP_OUT"; then
         echo -e "\n${YELLOW} $WARNING AUR não resolveu. Tentando Flatpak...${NC}\n"
         if command -v flatpak &>/dev/null; then
             flatpak $FLAT_CMD -y "${FINAL_ARGS[@]}"
@@ -171,7 +173,7 @@ if [[ "$TAG" != "SKIP" ]]; then
     if [[ $EXIT_CODE -ne 0 ]]; then
         TAG="$ALERT Erro"
         PKGS_TO_LOG="$RAW_CMD"
-    elif [[ "$ACTION" =~ ^(update|-u)$ ]]; then
+        elif [[ "$ACTION" =~ ^(update|-u)$ ]]; then
         PKGS_TO_LOG=$(sed 's/\x1b\[[0-9;]*[mGJK]//g' "$TMP_OUT" | grep -E "upgraded|atualizado" | awk '{print $3}' | tr '\n' ',' | sed 's/,$//')
     else
         PKGS_TO_LOG=$(IFS=','; echo "${FINAL_ARGS[*]}")
