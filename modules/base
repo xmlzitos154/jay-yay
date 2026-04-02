@@ -2,22 +2,18 @@
 
 tester() {
     step "Testando rede..."
-    if ping 8.8.8.8 -c 1 &>/dev/null; then
-        success "Conexão ativa. Continuando..."
-    else
-        error "Internet desconectada. Saindo com status 1"
-    fi
+    ping -c 1 8.8.8.8 &>/dev/null || error "Internet desconectada. Verifique seu Wi-Fi/Cabo."
+    success "Conexão ativa."
 }
-
 ins() {
     tester
     CMD="-S"
     TAG="[INSTALLED]"
-    FLAT_CMD="install flathub"
+    FLAT_CMD="install"
 }
 rmv() {
-    CMD="-R"
-    TAG="[REMOVED]"
+    CMD=$([[ "$AGRESSIVE_MODE" == "true" ]] && echo "-Rsn" || echo "-Rs")
+    TAG=$([[ "$AGRESSIVE_MODE" == "true" ]] && echo "[REMOVE-AGRESSIVE]" || echo "[REMOVED]")
     FLAT_CMD="uninstall"
 }
 upd() {
@@ -29,10 +25,11 @@ upd() {
 rfs() {
     tester
     CMD="-Syy"
-    TAG="[REFRESHED]"
+    TAG="[REFRESHED MIRRORS]"
+    FLAT_CMD="SKIP"
 }
 query_modules() {
-    step "Módulos instalados:"
-    ls -1 "$MODULES_DIR"
+    step "Módulos encontrados em $MODULES_DIR:"
+    ls -1F "$MODULES_DIR"
     exit 0
 }

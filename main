@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER="2.5 (Yogourt)"
+VER="2.7.2 (Yogourt)"
 
 REAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
 REAL_HOME=${REAL_HOME:-$HOME}
@@ -19,7 +19,7 @@ ALERT="[!]"
 ERROR="[x]"
 OK="[✓]"
 WARNING="[*]"
-CONTINUE="[>>]"
+CONTINUE=" :: "
 
 err01() {
     echo -e -n "${CYAN} $ALERT ${NC}" && echo "argumento invalido '$VAR'" | tr -d "-"
@@ -39,7 +39,6 @@ err04() {
     echo -e "${RED}$ERROR Módulo crítico '$MISSING_MODULE' não encontrado${NC}\n -> saindo com status 1"
     exit 1
 }
-
 
 [[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
 
@@ -97,46 +96,31 @@ usage() {
 
 [[ -z "$1" ]] && usage
 RAW_CMD="$*"
-ACTION="$1"
-shift
 
-USE_FLATPAK=false
-AGRESSIVE_MODE=false
-FINAL_ARGS=()
-YAY_FLAGS=()
+USE_FLATPAK=false ; AGRESSIVE_MODE=false ; FINAL_ARGS=() ; YAY_FLAGS=() ; ACTION=""
 
 for arg in "$@"; do
-    if [[ "$arg" == "--list-aur" ]]; then
-        if [[ "$ACTION" =~ ^(query|-q)$ ]]; then
-            if [[ "$MOD_3" != "0" ]]; then
-                list_aur
-                exit 0
-            else
-                echo -e "$WARNING Modulo 'extra' necessario."
-                exit 1
-            fi
-        fi
-        elif [[ "$arg" == "-f" || "$arg" == "--flatpak" ]]; then
-        USE_FLATPAK=true
-        elif [[ "$arg" == "-A" ]]; then
-        if [[ "$ACTION" =~ ^(remove|-rm)$ ]]; then
-            AGRESSIVE_MODE=true
-            CMD="-Rsn"
-            TAG="[REMOVED-AGRESSIVE]"
-        fi
-        elif [[ "$arg" == "--kill-dblck" ]]; then
-        if [[ -f /var/lib/pacman/db.lck ]]; then
-            step "Removendo trava do banco de dados..."
-            sudo rm /var/lib/pacman/db.lck && success "Trava removida."
-        else
-            echo "$WARNING Nenhuma trava de banco de dados encontrada."
-        fi
-        elif [[ "$arg" == -* ]]; then
-        YAY_FLAGS+=("$arg")
-    else
-        FINAL_ARGS+=("$arg")
-    fi
+    case "$arg" in
+        install|-i|-S|remove|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|refresh|-r|slog|-sl|clog|-cl|modules|-M|-v|--version|-h|--help|--check-updates)
+            [[ -z "$ACTION" ]] && ACTION="$arg" || FINAL_ARGS+=("$arg") ;;
+        -f|--flatpak)
+            USE_FLATPAK=true ;;
+        -A)
+            AGRESSIVE_MODE=true ;;
+        --kill-dblck)
+            if [[ -f /var/lib/pacman/db.lck ]]; then
+                sudo rm /var/lib/pacman/db.lck && success "Trava removida."
+            fi ;;
+        --list-aur)
+            [[ "$ACTION" =~ ^(query|-q)$ ]] && { [[ "$MOD_3" != "false" ]] && list_aur && exit 0 || error "Módulo extra necessário."; } ;;
+        -*)
+            YAY_FLAGS+=("$arg") ;;
+        *)
+            FINAL_ARGS+=("$arg") ;;
+    esac
 done
+
+[[ -z "$ACTION" && ${#FINAL_ARGS[@]} -gt 0 ]] && ACTION="${FINAL_ARGS[0]}" && unset 'FINAL_ARGS[0]'
 
 case "$ACTION" in
     "-") err02 ;;
@@ -144,45 +128,27 @@ case "$ACTION" in
     remove|-rm) rmv ;;
     refresh|-r) rfs ;;
     update|-u) upd ;;
-    slog|-sl) show_logs ;;
-    clog|-cl) clear_logs ;;
-    modules|-M) query_modules ;; 
-    search|-s)
-        [[ "$MOD_2" == "false" ]] && { echo "$WARNING Módulo search não carregado."; exit 1; } || searcher
-    ;;
-    query|-q)
-        [[ "$MOD_2" == "false" ]] && { echo "$WARNING Módulo search não carregado."; exit 1; } || query
-    ;;
-    cache|-c)
-        [[ "$MOD_1" == "false" ]] && { echo "$WARNING Módulo cache não carregado."; exit 1; } || clr_cache
-    ;;
-    orphan|-o)
-        [[ "$MOD_3" == "false" ]] && { echo "$WARNING Módulo extra não carregado."; exit 1; } || remove_orphans
-    ;;
-    mirrors|-M)
-        [[ "$MOD_3" == "false" ]] && { echo "$WARNING Módulo extra não carregado."; exit 1; } || refresh_mirrors
-    ;;
-    --check-updates) check_updates ;;
+    slog|-sl) show_logs ; exit 0 ;;
+    clog|-cl) clear_logs ; exit 0 ;;
+    modules|-M) query_modules ;;
+    search|-s) [[ "$MOD_2" == "false" ]] && error "Módulo search necessário." || { searcher "${FINAL_ARGS[@]}"; exit 0; } ;;
+    query|-q) [[ "$MOD_2" == "false" ]] && error "Módulo search necessário." || { query "${FINAL_ARGS[@]}"; exit 0; } ;;
+    cache|-c) [[ "$MOD_1" == "false" ]] && error "Módulo cache necessário." || { clr_cache ; exit 0; } ;;
+    orphan|-o) [[ "$MOD_1" == "false" ]] && error "Módulo cache necessário." || { remove_orphans ; exit 0; } ;;
+    mirrors|-m) [[ "$MOD_3" == "false" ]] && error "Módulo extra necessário." || { refresh_mirrors ; exit 0; } ;;
+    --check-updates) [[ "$MOD_3" == "false" ]] && error "Módulo extra necessário." || { check_updates ; exit 0; } ;;
     -v|--version) err03; exit 0 ;;
     -h|--help) help_message ;;
-    *)
-        VAR="$ACTION"
-        err01
-    ;;
+    *) VAR="$ACTION" ; err01 ;;
 esac
 
-if [[ "$ACTION" =~ ^(install|remove|-i|-rm)$ && ${#FINAL_ARGS[@]} -eq 0 ]]; then
-    error "Informe ao menos um pacote."
-fi
-
-command -v yay &>/dev/null || error "yay não encontrado."
-
-[[ "$USE_FLATPAK" == "true" ]] && FLAT_FLAGS="-y" || FLAT_FLAGS=""
+[[ "$ACTION" =~ ^(install|remove|-i|-rm)$ && ${#FINAL_ARGS[@]} -eq 0 ]] && error "Informe ao menos um pacote"
+command -v yay &>/dev/null || error "yay não encontrado"
 TMP_OUT=$(mktemp)
 
-if [[ "$ACTION" != "orphan" && "$ACTION" != "-o" ]]; then
+if [[ -n "$CMD" ]]; then
     [[ "$AGRESSIVE_MODE" == "true" ]] && echo -e "${RED} $ALERT Modo agressivo ativado!${NC}"
-    step "Iniciando processo via AUR..."
+    step "Iniciando via AUR..."
     yay "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" 2>&1 | tee "$TMP_OUT"
     EXIT_CODE=${PIPESTATUS[0]}
 fi
@@ -190,32 +156,27 @@ fi
 if [[ "$USE_FLATPAK" == "true" ]]; then
     if [[ "$ACTION" =~ ^(update|-u)$ ]]; then
         step "Atualizando Flatpaks..."
-        command -v flatpak &>/dev/null && flatpak update $FLAT_FLAGS
-        elif [[ "$ACTION" =~ ^(search|-s)$ ]]; then
-        step "Buscando no Flatpak..."
-        command -v flatpak &>/dev/null && flatpak search "${FINAL_ARGS[@]}"
-        elif [[ $EXIT_CODE -ne 0 ]] || grep -qiE "Nenhum pacote AUR localizado|não há nada a ser feito|target not found" "$TMP_OUT"; then
-        echo -e "\n${YELLOW} $ALERT AUR não encontrou nada. Pulando para Flatpak...${NC}\n"
+        flatpak update -y
+    elif [[ $EXIT_CODE -ne 0 ]] || grep -qiE "Nenhum pacote|não há nada|target not found" "$TMP_OUT"; then
+        echo -e "\n${YELLOW} $WARNING AUR não resolveu. Tentando Flatpak...${NC}\n"
         if command -v flatpak &>/dev/null; then
-            flatpak $FLAT_CMD $FLAT_FLAGS "${FINAL_ARGS[@]}"
+            flatpak $FLAT_CMD -y "${FINAL_ARGS[@]}"
             EXIT_CODE=$?
-            [[ $EXIT_CODE -eq 0 ]] && { [[ "$FLAT_CMD" == "uninstall" ]] && TAG="[RM FLATPAK]" || TAG="[FLATPAK]"; }
+            [[ $EXIT_CODE -eq 0 ]] && TAG=$([[ "$FLAT_CMD" == "uninstall" ]] && echo "[RM FLATPAK]" || echo "[FLATPAK]")
         fi
     fi
 fi
 
 if [[ "$TAG" != "SKIP" ]]; then
     if [[ $EXIT_CODE -ne 0 ]]; then
-        TAG="[!] Command failed"
+        TAG="$ALERT Erro"
         PKGS_TO_LOG="$RAW_CMD"
-        elif [[ "$ACTION" =~ ^(update|-u)$ ]]; then
+    elif [[ "$ACTION" =~ ^(update|-u)$ ]]; then
         PKGS_TO_LOG=$(sed 's/\x1b\[[0-9;]*[mGJK]//g' "$TMP_OUT" | grep -E "upgraded|atualizado" | awk '{print $3}' | tr '\n' ',' | sed 's/,$//')
     else
         PKGS_TO_LOG=$(IFS=','; echo "${FINAL_ARGS[*]}")
     fi
-    
-    FINAL_TEXT="${PKGS_TO_LOG:-SYSTEM}"
-    logger "$TAG" "$FINAL_TEXT"
+    logger "$TAG" "${PKGS_TO_LOG:-SYSTEM}"
 fi
 
-success "Operação finalizada."
+rm -f "$TMP_OUT"

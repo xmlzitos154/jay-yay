@@ -2,7 +2,7 @@
 
 clr_cache() {
     CMD="-Sc"
-    TAG="[CACHE CLEAN]"
+    TAG="[CLEANED CACHE]"
 }
 
 remove_orphans() {

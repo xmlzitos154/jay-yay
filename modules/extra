@@ -13,5 +13,5 @@ refresh_mirrors() {
     sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
     sudo reflector --country Brazil --latest 10 --sort rate --save /etc/pacman.d/mirrorlist
     echo "$OK Mirrors atualizados"
-    exit 0
+    TAG="[UPDATED MIRRORS]"
 }

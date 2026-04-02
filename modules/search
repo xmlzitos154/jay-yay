@@ -8,7 +8,7 @@ searcher() {
 }
 query() {
     CMD="-Qs"
-    TAG="[LOCAL_QUERY]"
+    TAG="[LOCAL QUERY]"
     local count=$(yay -Qs | wc -l)
 }
 check_updates() {
