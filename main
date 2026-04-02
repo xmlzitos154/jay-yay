@@ -133,8 +133,8 @@ case "$ACTION" in
     clog|-cl) clear_logs ; exit 0 ;;
     modules|-M) query_modules ;;
     --diff|-d) [[ "$MOD_1" == "false" ]] && error "Módulo cache necessário." || { check_conf ; exit 0; } ;;
-    search|-s) [[ "$MOD_2" == "false" ]] && error "Módulo search necessário." || { searcher "${FINAL_ARGS[@]}"; exit 0; } ;;
-    query|-q) [[ "$MOD_2" == "false" ]] && error "Módulo search necessário." || { query "${FINAL_ARGS[@]}"; exit 0; } ;;
+    search|-s) [[ "$MOD_2" == "false" ]] && error "Módulo search necessário." || searcher ;;
+    query|-q) [[ "$MOD_2" == "false" ]] && error "Módulo search necessário." || query && exit 0 ;;
     cache|-c) [[ "$MOD_1" == "false" ]] && error "Módulo cache necessário." || { clr_cache ; exit 0; } ;;
     orphan|-o) [[ "$MOD_1" == "false" ]] && error "Módulo cache necessário." || { remove_orphans ; exit 0; } ;;
     mirrors|-m) [[ "$MOD_3" == "false" ]] && error "Módulo extra necessário." || { refresh_mirrors ; exit 0; } ;;

@@ -1,5 +1,4 @@
-#!/usr/bin/env basgh
-
+#!/usr/bin/env bash
 searcher() {
     tester
     CMD="-Ss"
@@ -9,9 +8,10 @@ searcher() {
 query() {
     CMD="-Qs"
     TAG="[LOCAL QUERY]"
-    local count=$(yay -Qs | wc -l)
 }
+
 check_updates() {
+    tester
     step "Procurando pacotes desatualizados..."
     UPDS="$(checkupdates 2>/dev/null | wc -l)"
     if [[ "$UPDS" == "0" ]]; then
