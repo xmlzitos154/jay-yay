@@ -4,17 +4,17 @@ clr_cache() {
     if [[ -d "$REAL_HOME/.cache/yay" ]]; then
         step "Limpando builds do AUR..."
         find "$REAL_HOME/.cache/yay" -maxdepth 1 -type d -not -path "$REAL_HOME/.cache/yay" -exec rm -rf {} +
-        echo -e "${GREEN} $OK ${NC}"
+        echo -e "${GREEN} $COMPLETE ${NC}"
     fi
     if command -v flatpak &>/dev/null; then
         step "Limpando sobra de Flatpaks..."
         flatpak uninstall --unused -y &>/dev/null
-        echo -e "${GREEN} $OK ${NC}"
+        echo -e "${GREEN} $COMPLETE ${NC}"
     fi
 
     step "Limpando cache do pacman..."
     CMD="-Scc"
-    TAG="[CLEANED CACHE]"
+    TAG="CLEANED CACHE"
 }
 
 remove_orphans() {
@@ -22,11 +22,11 @@ remove_orphans() {
     ORPHANS="$(yay -Qtqd)"
     ORPHANS_N="$(yay -Qtqd | wc -l)"
     [[ "$ORPHANS_N" == "0" ]] && success "Nenhum pacote orfão encontrado" && logger "[SEARCHED ORPHANS]" "clean" && exit 0
-    echo "$WARNING $ORPHANS_N Orfãos encontrados"
+    echo "$NOTE $ORPHANS_N Orfãos encontrados"
     echo "$ORPHANS"
     step "Removendo Orfãos..."
     CMD="-Rsn $ORPHANS"
-    TAG="[REMOVED ORPHANS]"
+    TAG="REMOVED ORPHANS"
 }
 
 check_conf() {
@@ -36,14 +36,14 @@ check_conf() {
     if [[ -z "$PACNEWS" ]]; then
         success "Tudo limpo! Nenhum conflito em /etc."
     else
-        echo -e "${YELLOW} $WARNING Arquivos pendentes encontrados:${NC}"
+        echo -e "${YELLOW} $NOTE Arquivos pendentes encontrados:${NC}"
         echo "$PACNEWS"
-        echo -e "\n${CYAN} $CONTINUE ${NC}Mesclar agora com pacdiff? [y/N]"
+        echo -e "\n${CYAN} $CC ${NC}Mesclar agora com pacdiff? [y/N]"
         read -r -n 1 opt
         echo
         if [[ "$opt" =~ ^(y|Y)$ ]]; then
             sudo pacdiff
         fi
     fi
-    TAG="[CLEAR DIFFS]"
+    TAG="CLEAR DIFFS"
 }

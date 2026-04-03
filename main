@@ -1,100 +1,29 @@
 #!/usr/bin/env bash
 set -o pipefail
-VER="3.0.0"
-REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6)
-REAL_HOME=${REAL_HOME:-$HOME}
-MODULES_DIR="$REAL_HOME/.config/jay/modules"
-LOG_FILE="$REAL_HOME/.cache/jaylog.txt"
-CONFIG_DIR="$REAL_HOME/.config/jay"
-CYAN='\033[0;36m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m'
-ALERT="[!]"
-ERROR="[x]"
-OK="[✓]"
-WARNING="[*]"
-CONTINUE=":: "
-step() { echo -e "${CYAN} $CONTINUE ${NC}${1}"; }
-success() { echo -e "${GREEN} $OK ${NC}${1}"; }
+VER="3.1.5"
+REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
+MODULES_DIR="$REAL_HOME/.config/jay/modules"; LOG_FILE="$REAL_HOME/.cache/jaylog.txt"; CONFIG_DIR="$REAL_HOME/.config/jay"
+
+CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'; ALERT="[!]"; ERROR="[x]"; COMPLETE="[✓]"; NOTE="[*]"; CC=":: "
+
+step() { echo -e "${CYAN} $CC ${NC}${1}"; }
+success() { echo -e "${GREEN} $COMPLETE ${NC}${1}"; }
 error() { echo -e "${RED} $ERROR ${NC}${1}"; exit 1; }
-
-err01() {
-    echo -e "$ALERT opção invalida '$ACTION'"
-    exit 1
-}
-err02() {
-    echo -e -n "${CYAN} $ALERT ${NC}" && echo "argumento invalido '-'"
-    exit 1
-}
-ver_msg() {
-    echo -e "\n ${CYAN}-> JAY (Just Another Yogourt) - Version $VER ${NC}\n"
-}
-err04() {
-    echo -e "${RED}$ERROR Módulo crítico '$MISSING_MODULE' não encontrado${NC}\n -> saindo com status 1"
-    exit 1
-}
-
 
 [[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
 [[ ! -w "$LOG_FILE" ]] && sudo chown "${SUDO_USER:-$USER}":"${SUDO_USER:-$USER}" "$LOG_FILE" 2>/dev/null
-[[ ! -f "$MODULES_DIR/base" ]] && MISSING_MODULE="base" && err04
-[[ ! -f "$MODULES_DIR/log" ]] && MISSING_MODULE="log" && err04
-
-source "$MODULES_DIR/base"
-source "$MODULES_DIR/log"
-
+[[ ! -f "$MODULES_DIR/base" ]] && MISSING_MODULE="base" && err03 || source "$MODULES_DIR/base"
+[[ ! -f "$MODULES_DIR/log" ]] && MISSING_MODULE="log" && err03 || source "$MODULES_DIR/log"
 [[ -f "$MODULES_DIR/cache" ]] && source "$MODULES_DIR/cache" || MOD_1="false"
 [[ -f "$MODULES_DIR/search" ]] && source "$MODULES_DIR/search" || MOD_2="false"
 [[ -f "$MODULES_DIR/extra" ]] && source "$MODULES_DIR/extra" || MOD_3="false"
-
-help_message() {
-    ver_msg
-    echo -e "Uso: jay [comando] [opções] [pacotes]"
-    echo -e "Uso: jay [ -i | -rm | -s | -u ] [ -f | --flatpak ] [ --noconfirm ]"
-    echo -e "Uso: jay [ -q | query ] [ --list-aur ]"
-    echo -e "Options:\n"
-    echo -e "-h,  --help         Mostra essa mensagem"
-    echo -e "-i,  install        Sincronizar pacotes"
-    echo -e "-rm, remove         Remover pacotes (Use '-A' para modo Agressivo)"
-    echo -e "-u,  update         Atualizar o sistema"
-    if [[ "$MOD_2" != "false" ]]; then
-        echo -e "-s,  search         Pesquisa pacotes no AUR"
-        echo -e "-q,  query          Pesquisa pacotes locais"
-    fi
-    if [[ "$MOD_1" != "false" ]]; then
-        echo -e "-o,  orphan         Remove dependências inúteis"
-        echo -e "-c,  cache          Limpa todo o cache do pacman"
-    fi
-    if [[ "$MOD_3" != "false" ]]; then
-        echo -e "-m, mirrors         Procura repositorios velozes"
-        echo -e "--check-updates     Procura Atualizações Disponiveis"
-        echo -e "--fix-keys          Restaura chaves GPG invalidas ou não importadas"
-    fi
-    exit 0
-}
-usage() {
-    echo -e "Uso: jay [comando] [opções] [pacotes]"
-    exit 1
-}
-
 [[ -z "$1" ]] && usage
 
-RAW_CMD="$*"
-USE_FLATPAK=false
-AGRESSIVE_MODE=false
-FINAL_ARGS=()
-YAY_FLAGS=()
-EXIT_CODE=0
-KILL_DBLOCK=false
-LIST_AUR=false
+RAW_CMD="$*"; USE_FLATPAK=false; AGRESSIVE_MODE=false; FINAL_ARGS=(); YAY_FLAGS=(); EXIT_CODE=0; KILL_DBLOCK=false; LIST_AUR=false
 
 for arg in "$@"; do
     case "$arg" in
-        install|-i|remove|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|refresh|-r|slog|-sl|--fix-keys|clog|-cl|--check-updates|--diff)
-            [[ -z "$ACTION" ]] && ACTION="$arg" || FINAL_ARGS+=("$arg")
-        ;;
+        install|-i|remove|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|refresh|-r|slog|-sl|--fix-keys|clog|-cl|--check-updates|--diff) [[ -z "$ACTION" ]] && ACTION="$arg" || FINAL_ARGS+=("$arg") ;;
         -v|--version) ver_msg; exit 0 ;;
         -h|--help) help_message ;;
         -f|--flatpak) USE_FLATPAK=true ;;
@@ -107,17 +36,8 @@ for arg in "$@"; do
     esac
 done
 
-[[ -z "$ACTION" && ${#FINAL_ARGS[@]} -gt 0 ]] && ACTION="${FINAL_ARGS[0]}" && FINAL_ARGS=("${FINAL_ARGS[@]:1}") 
+[[ -z "$ACTION" && ${#FINAL_ARGS[@]} -gt 0 ]] && ACTION="${FINAL_ARGS[0]}" && FINAL_ARGS=("${FINAL_ARGS[@]:1}")
 [[ -z "$ACTION" ]] && ACTION="${YAY_FLAGS[0]:-$1}"
-
-
-logger() {
-    local status="${EXIT_CODE:-0}"
-    local tag="$1"
-    local info="$2"
-    printf -v date_str '%(%Y-%m-%d %H:%M:%S)T' -1
-    echo "[$date_str] [EXIT:$status] [$tag] -> $info" >> "$LOG_FILE"
-}
 
 case "$ACTION" in
     "-") err02 ;;
@@ -137,44 +57,48 @@ case "$ACTION" in
     *) err01 ;;
 esac
 
+run_flatpak_logic() {
+    [[ "$USE_FLATPAK" != "true" ]] && return
+    command -v flatpak &>/dev/null || return
+    case "$ACTION" in
+        update|-u)
+            step "Atualizando Flatpaks..."
+            flatpak update -y
+            EXIT_CODE=$?
+        ;;
+        search|-s)
+            [[ -n "$FLAT_CMD" ]] && step "Procurando no Flatpak..." && flatpak "$FLAT_CMD" "${FINAL_ARGS[@]}"
+        ;;
+        *)
+            if [[ $EXIT_CODE -ne 0 && -n "$FLAT_CMD" ]] && grep -qiE "target not found|Nenhum pacote" "$TMP_OUT"; then
+                echo -e "\n${YELLOW} $NOTE AUR falhou. Tentando Flatpak...${NC}\n"
+                flatpak "$FLAT_CMD" -y "${FINAL_ARGS[@]}"
+                EXIT_CODE=$?
+                [[ $EXIT_CODE -eq 0 ]] && TAG="[FLATPAK]"
+            fi
+        ;;
+    esac
+}
+
 [[ "$TAG" == "SKIP" ]] && exit 0
 [[ "$ACTION" =~ ^(install|remove|-i|-rm)$ && ${#FINAL_ARGS[@]} -eq 0 ]] && error "Informe ao menos um pacote"
 command -v yay &>/dev/null || error "yay não encontrado"
-TMP_OUT=$(mktemp) || error "Falha ao criar arquivo temporário"
+
+TMP_OUT=$(mktemp) || err04
 trap 'rm -f "$TMP_OUT" 2>/dev/null' EXIT
+
 if [[ -n "$ACTION" ]]; then
     [[ "$AGRESSIVE_MODE" == "true" ]] && echo -e "${RED} $ALERT Modo agressivo ativado!${NC}"
     [[ ! "$ACTION" =~ ^(-m|mirrors)$ ]] && step "Executando: $ACTION"
 fi
+
 if [[ "$KILL_DBLOCK" == "true" ]]; then
-    step "Verificando trava do pacman..."
-    if pgrep -x pacman &>/dev/null || pgrep -x yay &>/dev/null; then
-        error "Pacman/yay em execução."
-    fi
+    pgrep -x "pacman|yay" &>/dev/null && error "Pacman/yay em execução."
     [[ -f /var/lib/pacman/db.lck ]] && sudo rm /var/lib/pacman/db.lck && success "Trava removida."
 fi
-if [[ "$ACTION" =~ ^(search|-s)$ ]]; then
-    yay "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" --noconfirm --nodiffmenu --noeditmenu 2>&1 | tee "$TMP_OUT"
-    EXIT_CODE=${PIPESTATUS[0]}
-    elif [[ -n "$CMD" ]]; then
-    yay "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" 2>&1 | tee "$TMP_OUT"
-    EXIT_CODE=${PIPESTATUS[0]}
-fi
-if [[ "$USE_FLATPAK" == "true" ]]; then
-    if command -v flatpak &>/dev/null; then
-        if [[ "$ACTION" =~ ^(update|-u)$ ]]; then
-            step "Atualizando Flatpaks..."
-            flatpak update -y
-            EXIT_CODE=$?
-            elif [[ "$ACTION" =~ ^(search|-s)$ && -n "$FLAT_CMD" ]]; then
-            step "Procurando pacotes no Flatpak..."
-            flatpak "$FLAT_CMD" "${FINAL_ARGS[@]}"
-            elif [[ $EXIT_CODE -ne 0 && -n "$FLAT_CMD" ]] && grep -qiE "target not found|Nenhum pacote" "$TMP_OUT"; then
-            echo -e "\n${YELLOW} $WARNING AUR não funcionou. Tentando no Flatpak...${NC}\n"
-            flatpak "$FLAT_CMD" -y "${FINAL_ARGS[@]}"
-            EXIT_CODE=$?
-            [[ $EXIT_CODE -eq 0 ]] && TAG="[FLATPAK]"
-        fi
-    fi
-fi
+
+case "$ACTION" in
+    search|-s) yay "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" --noconfirm --nodiffmenu --noeditmenu 2>&1 | tee "$TMP_OUT"; EXIT_CODE=${PIPESTATUS[0]}; run_flatpak_logic ;;
+    *) [[ -n "$CMD" ]] && yay "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" 2>&1 | tee "$TMP_OUT"; EXIT_CODE=${PIPESTATUS[0]}; run_flatpak_logic ;;
+esac
 [[ -n "$TAG" || "$EXIT_CODE" -eq 0 ]] && logger "${TAG:-SYSTEM}" "${RAW_CMD}"

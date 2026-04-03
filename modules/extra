@@ -3,15 +3,15 @@
 list_aur() {
     step "Filtrando pacotes instalados via AUR..."
     pacman -Qm | column -t
-    TAG="[LOCAL_QUERY (AUR)]"
+    TAG="LOCAL_QUERY (AUR)"
     local count=$(yay -Qm | wc -l)
-    echo -e "\n${GREEN}$OK${NC} Total de $count pacotes AUR encontrados."
+    echo -e "\n${GREEN}$COMPLETE${NC} Total de $count pacotes AUR encontrados."
 }
 
 refresh_mirrors() {
     step "Iniciando otimização de mirrors (Reflector)..."
     if ! command -v reflector &>/dev/null; then
-        echo -e "${YELLOW}$WARNING Reflector não encontrado.${NC}"
+        echo -e "${YELLOW}$NOTE Reflector não encontrado.${NC}"
         read -p "Deseja instalar o reflector para otimizar mirrors? [S/n] " -n 1 -r
         echo
         if [[ $REPLY =~ ^[Ss]$ ]]; then
@@ -26,7 +26,7 @@ refresh_mirrors() {
     step "Buscando os 10 mirrors mais rápidos no Brasil... (Aguarde)"
     if sudo reflector --country Brazil --latest 10 --sort rate --save /etc/pacman.d/mirrorlist; then
         success "Mirrors atualizados e salvos com sucesso."
-        TAG="[UPDATE MIRRORS]"
+        TAG="UPDATE MIRRORS"
     else
         error "Falha ao atualizar mirrors. Verifique sua conexão."
     fi

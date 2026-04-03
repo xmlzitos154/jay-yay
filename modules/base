@@ -5,26 +5,30 @@ tester() {
     ping -c 1 8.8.8.8 &>/dev/null || error "Internet desconectada. Verifique seu Wi-Fi/Cabo."
     success "Conexão ativa."
 }
+
 ins() {
     tester
     CMD="-S"
-    TAG="[INSTALLED]"
+    TAG="INSTALLED"
     FLAT_CMD="install"
 }
+
 rmv() {
     CMD=$([[ "$AGRESSIVE_MODE" == "true" ]] && echo "-Rsn" || echo "-Rs")
     TAG=$([[ "$AGRESSIVE_MODE" == "true" ]] && echo "[REMOVE-AGRESSIVE]" || echo "[REMOVED]")
     FLAT_CMD="uninstall"
 }
+
 upd() {
     tester
     CMD="-Syu"
-    TAG="[UPDATED]"
+    TAG="UPDATED"
     FLAT_CMD="update"
 }
+
 rfs() {
     tester
     CMD="-Syy"
-    TAG="[REFRESHED MIRRORS]"
+    TAG="REFRESHED MIRRORS"
     FLAT_CMD="SKIP"
 }

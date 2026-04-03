@@ -3,13 +3,13 @@
 searcher() {
     tester
     CMD="-Ss"
-    TAG="[SEARCHED]"
+    TAG="SEARCHED"
     FLAT_CMD="search"
 }
 
 query() {
     CMD="-Qs"
-    TAG="[LOCAL QUERY]"
+    TAG="LOCAL QUERY"
 }
 
 check_updates() {
@@ -20,7 +20,7 @@ check_updates() {
         success "Nenhuma atualização encontrada."
         exit 0
     fi
-    echo -e "${YELLOW} $WARNING $UPDS Atualizações encontradas: ${NC}"
+    echo -e "${YELLOW} $NOTE $UPDS Atualizações encontradas: ${NC}"
     echo " $(checkupdates)"
     exit 0
 }
