@@ -1,26 +1,21 @@
 #!/usr/bin/env bash
 
-# --- Configurações de Cores ---
-G='\e[32m' # Verde
-C='\e[36m' # Ciano
-Y='\e[33m' # Amarelo
-R='\e[31m' # Vermelho
-B='\e[1m'  # Negrito
-NC='\e[0m' # Reset
+G='\e[32m'
+C='\e[36m'
+Y='\e[33m'
+R='\e[31m'
+B='\e[1m'
+NC='\e[0m'
 
-CONFIG_DIRECTORY="/home/$(logname)/.config/jay"
+REAL_USER="${SUDO_USER:-$USER}"
+CONFIG_DIRECTORY="/home/$REAL_USER/.config/jay"
 
-# --- Extração Cirúrgica da Versão ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE="$SCRIPT_DIR/main"
 
 if [[ -f "$SOURCE" ]]; then
-    VER_LINE=$(grep -m 1 "^VER=" "$SOURCE")
-    if [[ -n "$VER_LINE" ]]; then
-        eval "$VER_LINE"
-    else
-        VER="unk"
-    fi
+    VER=$(sed -n 's/^VER="\(.*\)"/\1/p' "$SOURCE" | head -1)
+    [[ -z "$VER" ]] && VER="unk"
 else
     echo -e "${R}Erro: Arquivo 'main' não encontrado.${NC}"
     exit 1
@@ -29,10 +24,7 @@ fi
 BIN_NAME="jay"
 INSTALL_PATH="/usr/bin/$BIN_NAME"
 
-# --- Root Check ---
 [[ $EUID -ne 0 ]] && { echo -e "${Y}>>${NC} Solicitando root..."; exec sudo "$0" "$@"; }
-
-# --- Funções de Interface ---
 
 title() {
     clear
@@ -49,16 +41,14 @@ success() {
     echo -e "${G}  [OK]${NC} $1"
 }
 
-# --- Lógica de Instalação ---
-
 new_installer() {
     title
     step "Copiando arquivos necessários..."
     install -Dm755 "$SOURCE" "$INSTALL_PATH"
     success "Pronto."
     step "Criando pasta de configs..."
-    mkdir -p "$CONFIG_DIRECTORY"
-    cd  "$CONFIG_DIRECTORY"
+    mkdir -p "$CONFIG_DIRECTORY" || exit 1
+    cd "$CONFIG_DIRECTORY" || exit 1
     step "Carregando módulos basicos..."
     [[ -d "modules" ]] && rm -rf "modules"
     mkdir "modules"
@@ -69,6 +59,7 @@ new_installer() {
     success "Pronto."
     installer_part2
 }
+
 installer_part2() {
     echo "Que modulos deseja instalar?"
     echo ""
@@ -85,10 +76,9 @@ installer_part2() {
         "3") cp -r "$SCRIPT_DIR/modules/extra" "$CONFIG_DIRECTORY/modules" ;;
         "4") cp -r "$SCRIPT_DIR/modules/." "$CONFIG_DIRECTORY/modules" ;;
         "5") echo "  [>>]" ;;
-        *) echo "modulo não existe." ;;
+        *) echo "modulo não existe." && exit 1 ;;
     esac
     step "Configurando completions"
-    
     if [ -d "/usr/share/fish/vendor_completions.d" ]; then
         cat <<EOF > "/usr/share/fish/vendor_completions.d/jay.fish"
 complete -c jay -f
@@ -104,7 +94,7 @@ complete -c jay -s cl -l clog -d "Limpar histórico"
 EOF
         success "Fish completions (orphan adicionado)"
     fi
-    chown -R $(logname):$(logname) "$CONFIG_DIRECTORY"
+    chown -R "$REAL_USER:$REAL_USER" "$CONFIG_DIRECTORY"
     success "Permissões ajustadas."
     echo -e "\n${G}${B}Pronto!${NC} O jay foi instalado."
     read -n1 -s -p "Pressione qualquer tecla para voltar..."
@@ -121,7 +111,7 @@ debug() {
     echo "  s4a7 - Limpar pasta de módulos"
     echo ""
     read -p " >> " DBG
-    
+
     case "$DBG" in
         "s4a7")
             rm -rf "$CONFIG_DIRECTORY/modules/"*
@@ -131,7 +121,6 @@ debug() {
             echo -e "\nQual módulo? (cache | search | extra | base | log)"
             read -p " >> " MOD_NAME
             TARGET_SRC="$SCRIPT_DIR/modules/$MOD_NAME"
-            
             if [[ -e "$TARGET_SRC" ]]; then
                 cp -r "$TARGET_SRC" "$CONFIG_DIRECTORY/modules/"
                 success "Módulo '$MOD_NAME' injetado com sucesso."
@@ -157,8 +146,9 @@ debug() {
             echo -e "${R}Código de debug inválido.${NC}"
         ;;
     esac
-    chown -R $(logname):$(logname) "$CONFIG_DIRECTORY"
+    chown -R "$REAL_USER:$REAL_USER" "$CONFIG_DIRECTORY"
     read -n1 -s -p "Pressione qualquer tecla para voltar..."
+    exit 0
 }
 
 run_remove() {
@@ -166,14 +156,13 @@ run_remove() {
     echo -e "${R}${B}Removendo JAY...${NC}\n"
     rm -f "$INSTALL_PATH"
     rm -f "/usr/share/fish/vendor_completions.d/jay.fish"
-    rm -fr "$CONFIG_DIRECTORY"
+    rm -rf "$CONFIG_DIRECTORY"
     success "Arquivos removidos"
     echo -e "\n${Y}Sistema limpo.${NC}"
     read -n1 -s -p "Pressione qualquer tecla para voltar..."
     exit 0
 }
 
-# --- Menu ---
 while true; do
     title
     echo -e "  ${C}1.${NC} Instalar / Atualizar"
@@ -181,7 +170,7 @@ while true; do
     echo -e "  ${C}3.${NC} Sair"
     echo ""
     read -p " > " DO
-    
+
     case "$DO" in
         1) new_installer ;;
         2) run_remove ;;

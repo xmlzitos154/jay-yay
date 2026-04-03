@@ -15,3 +15,16 @@ refresh_mirrors() {
     echo "$OK Mirrors atualizados"
     TAG="[UPDATED MIRRORS]"
 }
+
+fix_keys() {
+    step "recuperando chaves GPG pendentes..."
+    local keys=$(grep -oE "[A-F0-9]{16}" "$TMP_OUT")
+    if [[ -n "$keys" ]]; then
+        for key in $keys; do
+            gpg --recv-keys "$key" || gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys "$key"
+        done
+        success "Chaves importadas. Tente rodar o comando novamente."
+    else
+        error "Nenhuma chave identificada no erro."
+    fi
+}
