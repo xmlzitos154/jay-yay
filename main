@@ -20,54 +20,54 @@ step() { echo -e "${CYAN} $CONTINUE ${NC}${1}"; }
 success() { echo -e "${GREEN} $OK ${NC}${1}"; }
 error() { echo -e "${RED} $ERROR ${NC}${1}"; exit 1; }
 err01() {
-echo -e -n "${CYAN} $ALERT ${NC}" && echo "argumento invalido '$ACTION'"
-exit 1
+    echo -e -n "${CYAN} $ALERT ${NC}" && echo "argumento invalido '$ACTION'"
+    exit 1
 }
 err02() {
-echo -e -n "${CYAN} $ALERT ${NC}" && echo "argumento invalido '-'"
-exit 1
+    echo -e -n "${CYAN} $ALERT ${NC}" && echo "argumento invalido '-'"
+    exit 1
 }
 ver_msg() {
-echo -e "\n ${CYAN}-> JAY (Just Another Yogourt) - Version $VER ${NC}\n"
+    echo -e "\n ${CYAN}-> JAY (Just Another Yogourt) - Version $VER ${NC}\n"
 }
 err04() {
-echo -e "${RED}$ERROR Módulo crítico '$MISSING_MODULE' não encontrado${NC}\n -> saindo com status 1"
-exit 1
+    echo -e "${RED}$ERROR Módulo crítico '$MISSING_MODULE' não encontrado${NC}\n -> saindo com status 1"
+    exit 1
 }
 err05() {
-echo -e "${RED}$ERROR Erro interno: Variável CMD não definida para a ação '$ACTION'${NC}"
-exit 1
+    echo -e "${RED}$ERROR Erro interno: Variável CMD não definida para a ação '$ACTION'${NC}"
+    exit 1
 }
 help_message() {
-ver_msg
-echo -e "Uso: jay [comando] [opções] [pacotes]"
-echo -e "Uso: jay [ -i | -rm | -s | -u ] [ -f | --flatpak ] [ --noconfirm ]"
-echo -e "Uso: jay [ -q | query ] [ --list-aur ]"
-echo -e "Options:\n"
-echo -e "-h,  --help         Mostra essa mensagem"
-echo -e "-i,  install        Sincronizar pacotes"
-echo -e "-rm, remove         Remover pacotes (Use '-A' para modo Agressivo)"
-echo -e "-u,  update         Atualizar o sistema"
-if [[ "$MOD_2" != "false" ]]; then
-echo -e "-s,  search         Pesquisa pacotes no AUR"
-echo -e "-q,  query          Pesquisa pacotes locais"
-fi
-if [[ "$MOD_1" != "false" ]]; then
-echo -e "-o,  orphan         Remove dependências inúteis"
-echo -e "-c,  cache          Limpa todo o cache do pacman"
-echo -e "-d,  --diff         Gerencia arquivos .pacnew/.pacsave"
-fi
-if [[ "$MOD_3" != "false" ]]; then
-echo -e "-m, mirrors         Procura repositorios velozes"
-echo -e "-M, modules         Mostra os modulos disponiveis"
-echo -e "--check-updates     Procura Atualizações Disponiveis"
-echo -e "--fix-keys          Restaura chaves GPG invalidas ou não importadas"
-fi
-exit 0
+    ver_msg
+    echo -e "Uso: jay [comando] [opções] [pacotes]"
+    echo -e "Uso: jay [ -i | -rm | -s | -u ] [ -f | --flatpak ] [ --noconfirm ]"
+    echo -e "Uso: jay [ -q | query ] [ --list-aur ]"
+    echo -e "Options:\n"
+    echo -e "-h,  --help         Mostra essa mensagem"
+    echo -e "-i,  install        Sincronizar pacotes"
+    echo -e "-rm, remove         Remover pacotes (Use '-A' para modo Agressivo)"
+    echo -e "-u,  update         Atualizar o sistema"
+    if [[ "$MOD_2" != "false" ]]; then
+        echo -e "-s,  search         Pesquisa pacotes no AUR"
+        echo -e "-q,  query          Pesquisa pacotes locais"
+    fi
+    if [[ "$MOD_1" != "false" ]]; then
+        echo -e "-o,  orphan         Remove dependências inúteis"
+        echo -e "-c,  cache          Limpa todo o cache do pacman"
+        echo -e "-d,  --diff         Gerencia arquivos .pacnew/.pacsave"
+    fi
+    if [[ "$MOD_3" != "false" ]]; then
+        echo -e "-m, mirrors         Procura repositorios velozes"
+        echo -e "-M, modules         Mostra os modulos disponiveis"
+        echo -e "--check-updates     Procura Atualizações Disponiveis"
+        echo -e "--fix-keys          Restaura chaves GPG invalidas ou não importadas"
+    fi
+    exit 0
 }
 usage() {
-echo -e "${RED} $ERROR Uso: jay <comando> <pacotes>${NC}"
-exit 1
+    echo -e "${RED} $ERROR Uso: jay <comando> <pacotes>${NC}"
+    exit 1
 }
 [[ -z "$1" ]] && usage
 RAW_CMD="$*"
@@ -83,43 +83,43 @@ TAG=""
 FLAT_CMD=""
 LIST_AUR=false
 for arg in "$@"; do
-case "$arg" in
-install|-i|remove|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|refresh|-r|slog|-sl|--fix-keys|clog|-cl|modules|-M|--check-updates|--diff)
+    case "$arg" in
+        install|-i|remove|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|refresh|-r|slog|-sl|--fix-keys|clog|-cl|modules|-M|--check-updates|--diff)
             [[ -z "$ACTION" ]] && ACTION="$arg" || FINAL_ARGS+=("$arg")
-            ;;
--v|--version)
-ver_msg
-exit 0
-            ;;
--h|--help)
-help_message
-            ;;
--f|--flatpak)
-USE_FLATPAK=true
-            ;;
--A)
-AGRESSIVE_MODE=true
-            ;;
---list-aur)
-LIST_AUR=true
-            ;;
---kill-dblck)
-KILL_DBLOCK=true
-            ;;
--)
-err02
-            ;;
--*)
-YAY_FLAGS+=("$arg")
-            ;;
-*)
-FINAL_ARGS+=("$arg")
-            ;;
-esac
+        ;;
+        -v|--version)
+            ver_msg
+            exit 0
+        ;;
+        -h|--help)
+            help_message
+        ;;
+        -f|--flatpak)
+            USE_FLATPAK=true
+        ;;
+        -A)
+            AGRESSIVE_MODE=true
+        ;;
+        --list-aur)
+            LIST_AUR=true
+        ;;
+        --kill-dblck)
+            KILL_DBLOCK=true
+        ;;
+        -)
+            err02
+        ;;
+        -*)
+            YAY_FLAGS+=("$arg")
+        ;;
+        *)
+            FINAL_ARGS+=("$arg")
+        ;;
+    esac
 done
 if [[ -z "$ACTION" && ${#FINAL_ARGS[@]} -gt 0 ]]; then
-ACTION="${FINAL_ARGS[0]}"
-FINAL_ARGS=("${FINAL_ARGS[@]:1}")
+    ACTION="${FINAL_ARGS[0]}"
+    FINAL_ARGS=("${FINAL_ARGS[@]:1}")
 fi
 [[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
 [[ ! -f "$MODULES_DIR/base" ]] && MISSING_MODULE="base" && err04
@@ -130,30 +130,30 @@ source "$MODULES_DIR/log"
 [[ -f "$MODULES_DIR/search" ]] && source "$MODULES_DIR/search" || MOD_2="false"
 [[ -f "$MODULES_DIR/extra" ]] && source "$MODULES_DIR/extra" || MOD_3="false"
 logger() {
-local tag="$1"
-local info="$2"
-local date_str
-printf -v date_str '%(%H:%M - %d/%m/%Y)T' -1
-echo "($date_str) | $tag | $info" >> "$LOG_FILE"
+    local tag="$1"
+    local info="$2"
+    local date_str
+    printf -v date_str '%(%H:%M - %d/%m/%Y)T' -1
+    echo "($date_str) | $tag | $info" >> "$LOG_FILE"
 }
 case "$ACTION" in
-"-") err02 ;;
-install|-i) ins ;;
-remove|-rm) rmv ;;
-refresh|-r) rfs ;;
-update|-u) upd ;;
-search|-s) searcher ;;
-query|-q) query ;;
-cache|-c) clr_cache ;;
-orphan|-o) remove_orphans ;;
-mirrors|-m) refresh_mirrors ;;
---check-updates) check_updates ;;
---fix-keys) fix_keys ;;
-slog|-sl) show_logs ;;
-clog|-cl) clear_logs ;;
-modules|-M) query_modules ;;
-"") usage ;;
-*) err01 ;;
+    "-") err02 ;;
+    install|-i) ins ;;
+    remove|-rm) rmv ;;
+    refresh|-r) rfs ;;
+    update|-u) upd ;;
+    search|-s) searcher ;;
+    query|-q) query ;;
+    cache|-c) clr_cache ;;
+    orphan|-o) remove_orphans ;;
+    mirrors|-m) refresh_mirrors ;;
+    --check-updates) check_updates ;;
+    --fix-keys) fix_keys ;;
+    slog|-sl) show_logs ;;
+    clog|-cl) clear_logs ;;
+    modules|-M) query_modules ;;
+    "") usage ;;
+    *) err01 ;;
 esac
 [[ "$TAG" == "SKIP" ]] && exit 0
 [[ "$ACTION" =~ ^(install|remove|-i|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|refresh|-r|--fix-keys|--check-updates|--diff)$ ]] && [[ -z "$CMD" ]] && err05
@@ -166,34 +166,34 @@ if [[ -n "$ACTION" ]]; then
     [[ ! "$ACTION" =~ ^(modules|-M|slog|-sl|clog|-cl)$ ]] && step "Executando: $ACTION"
 fi
 if [[ "$KILL_DBLOCK" == "true" ]]; then
-step "Verificando trava do pacman..."
-if pgrep -x pacman &>/dev/null || pgrep -x yay &>/dev/null; then
-error "Pacman/yay em execução."
-fi
+    step "Verificando trava do pacman..."
+    if pgrep -x pacman &>/dev/null || pgrep -x yay &>/dev/null; then
+        error "Pacman/yay em execução."
+    fi
     [[ -f /var/lib/pacman/db.lck ]] && sudo rm /var/lib/pacman/db.lck && success "Trava removida."
 fi
 if [[ "$ACTION" =~ ^(search|-s)$ ]]; then
-yay "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" --noconfirm --nodiffmenu --noeditmenu 2>&1 | tee "$TMP_OUT"
-EXIT_CODE=${PIPESTATUS[0]}
-elif [[ -n "$CMD" ]]; then
-yay "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" 2>&1 | tee "$TMP_OUT"
-EXIT_CODE=${PIPESTATUS[0]}
+    yay "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" --noconfirm --nodiffmenu --noeditmenu 2>&1 | tee "$TMP_OUT"
+    EXIT_CODE=${PIPESTATUS[0]}
+    elif [[ -n "$CMD" ]]; then
+    yay "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" 2>&1 | tee "$TMP_OUT"
+    EXIT_CODE=${PIPESTATUS[0]}
 fi
 if [[ "$USE_FLATPAK" == "true" ]]; then
-if command -v flatpak &>/dev/null; then
-if [[ "$ACTION" =~ ^(update|-u)$ ]]; then
-step "Atualizando Flatpaks..."
-flatpak update -y
-EXIT_CODE=$?
-elif [[ "$ACTION" =~ ^(search|-s)$ && -n "$FLAT_CMD" ]]; then
-step "Procurando pacotes no Flatpak..."
-flatpak "$FLAT_CMD" "${FINAL_ARGS[@]}"
-elif [[ $EXIT_CODE -ne 0 && -n "$FLAT_CMD" ]] && grep -qiE "target not found|Nenhum pacote" "$TMP_OUT"; then
-echo -e "\n${YELLOW} $WARNING AUR não funcionou. Tentando no Flatpak...${NC}\n"
-flatpak "$FLAT_CMD" -y "${FINAL_ARGS[@]}"
-EXIT_CODE=$?
+    if command -v flatpak &>/dev/null; then
+        if [[ "$ACTION" =~ ^(update|-u)$ ]]; then
+            step "Atualizando Flatpaks..."
+            flatpak update -y
+            EXIT_CODE=$?
+            elif [[ "$ACTION" =~ ^(search|-s)$ && -n "$FLAT_CMD" ]]; then
+            step "Procurando pacotes no Flatpak..."
+            flatpak "$FLAT_CMD" "${FINAL_ARGS[@]}"
+            elif [[ $EXIT_CODE -ne 0 && -n "$FLAT_CMD" ]] && grep -qiE "target not found|Nenhum pacote" "$TMP_OUT"; then
+            echo -e "\n${YELLOW} $WARNING AUR não funcionou. Tentando no Flatpak...${NC}\n"
+            flatpak "$FLAT_CMD" -y "${FINAL_ARGS[@]}"
+            EXIT_CODE=$?
             [[ $EXIT_CODE -eq 0 ]] && TAG="[FLATPAK]"
-fi
-fi
+        fi
+    fi
 fi
 [[ -n "$TAG" || "$EXIT_CODE" -eq 0 ]] && logger "${TAG:-SYSTEM}" "${RAW_CMD}"
