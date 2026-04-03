@@ -175,7 +175,7 @@ while true; do
         1) new_installer ;;
         2) run_remove ;;
         3) echo -e "${C}Até logo!${NC}"; exit 0 ;;
-        "DEBUG_MODE") debug ;;
+        "DEBUG_MODULES") debug ;;
         *) echo -e "${R}Opção inválida.${NC}"; sleep 0.5 ;;
     esac
 done

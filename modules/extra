@@ -9,12 +9,27 @@ list_aur() {
 }
 
 refresh_mirrors() {
-    tester
-    echo "$WARNING Procurando mirrors..."
+    step "Iniciando otimização de mirrors (Reflector)..."
+    if ! command -v reflector &>/dev/null; then
+        echo -e "${YELLOW}$WARNING Reflector não encontrado.${NC}"
+        read -p "Deseja instalar o reflector para otimizar mirrors? [S/n] " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Ss]$ ]]; then
+            sudo pacman -S reflector --noconfirm
+        else
+            error "Reflector é necessário para esta função."
+        fi
+    fi
+
+    step "Criando backup em /etc/pacman.d/mirrorlist.bak"
     sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
-    sudo reflector --country Brazil --latest 10 --sort rate --save /etc/pacman.d/mirrorlist
-    echo "$OK Mirrors atualizados"
-    TAG="[UPDATED MIRRORS]"
+    step "Buscando os 10 mirrors mais rápidos no Brasil... (Aguarde)"
+    if sudo reflector --country Brazil --latest 10 --sort rate --save /etc/pacman.d/mirrorlist; then
+        success "Mirrors atualizados e salvos com sucesso."
+        TAG="[UPDATE MIRRORS]"
+    else
+        error "Falha ao atualizar mirrors. Verifique sua conexão."
+    fi
 }
 
 fix_keys() {

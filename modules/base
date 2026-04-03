@@ -28,8 +28,3 @@ rfs() {
     TAG="[REFRESHED MIRRORS]"
     FLAT_CMD="SKIP"
 }
-query_modules() {
-    step "Módulos encontrados em $MODULES_DIR:"
-    ls -1F "$MODULES_DIR"
-    exit 0
-}
