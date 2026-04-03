@@ -18,14 +18,23 @@ refresh_mirrors() {
 }
 
 fix_keys() {
-    step "recuperando chaves GPG pendentes..."
-    local keys=$(grep -oE "[A-F0-9]{16}" "$TMP_OUT")
-    if [[ -n "$keys" ]]; then
-        for key in $keys; do
-            gpg --recv-keys "$key" || gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys "$key"
-        done
-        success "Chaves importadas. Tente rodar o comando novamente."
-    else
-        error "Nenhuma chave identificada no erro."
+    step "Iniciando recuperação de chaves GPG..."
+    yay -Sy archlinux-keyring --noconfirm
+    if [[ -f "$TMP_OUT" ]]; then
+        local keys=$(grep -oP '(?<=key\s)([A-F0-9]{16,})|(?<=ID\s)([A-F0-9]{16,})' "$TMP_OUT" | sort -u)
+        
+        if [[ -n "$keys" ]]; then
+            for key in $keys; do
+                step "Importando chave: $key"
+                gpg --recv-keys "$key" || gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys "$key"
+            done
+        fi
     fi
+    step "Limpando caches de chaves corrompidas..."
+    sudo find /etc/pacman.d/gnupg -type f -name "*.lck" -delete
+    sudo pacman-key --init
+    sudo pacman-key --populate archlinux
+    
+    success "Procedimento de chaves finalizado."
+    TAG="SKIP"
 }

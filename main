@@ -38,6 +38,7 @@ err04() {
 
 
 [[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
+[[ ! -w "$LOG_FILE" ]] && sudo chown "${SUDO_USER:-$USER}":"${SUDO_USER:-$USER}" "$LOG_FILE" 2>/dev/null
 [[ ! -f "$MODULES_DIR/base" ]] && MISSING_MODULE="base" && err04
 [[ ! -f "$MODULES_DIR/log" ]] && MISSING_MODULE="log" && err04
 
@@ -65,7 +66,6 @@ help_message() {
     if [[ "$MOD_1" != "false" ]]; then
         echo -e "-o,  orphan         Remove dependências inúteis"
         echo -e "-c,  cache          Limpa todo o cache do pacman"
-        echo -e "-d,  --diff         Gerencia arquivos .pacnew/.pacsave"
     fi
     if [[ "$MOD_3" != "false" ]]; then
         echo -e "-m, mirrors         Procura repositorios velozes"
@@ -148,7 +148,7 @@ esac
 [[ "$ACTION" =~ ^(install|remove|-i|-rm)$ && ${#FINAL_ARGS[@]} -eq 0 ]] && error "Informe ao menos um pacote"
 command -v yay &>/dev/null || error "yay não encontrado"
 TMP_OUT=$(mktemp) || error "Falha ao criar arquivo temporário"
-trap 'rm -f "$TMP_OUT"' EXIT
+trap 'rm -f "$TMP_OUT" 2>/dev/null' EXIT
 if [[ -n "$ACTION" ]]; then
     [[ "$AGRESSIVE_MODE" == "true" ]] && echo -e "${RED} $ALERT Modo agressivo ativado!${NC}"
     [[ ! "$ACTION" =~ ^(modules|-M|-m|mirrors)$ ]] && step "Executando: $ACTION"
