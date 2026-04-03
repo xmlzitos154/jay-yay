@@ -21,7 +21,7 @@ remove_orphans() {
     step "Buscando pacotes orfãos..."
     ORPHANS="$(yay -Qtqd)"
     ORPHANS_N="$(yay -Qtqd | wc -l)"
-    [[ "$ORPHANS_N" == "0" ]] && success "Nenhum pacote orfão encontrado" && logger "[SEARCHED ORPHANS]" "clean" && return 0
+    [[ "$ORPHANS_N" == "0" ]] && success "Nenhum pacote orfão encontrado" && logger "[SEARCHED ORPHANS]" "clean" && exit 0
     echo "$WARNING $ORPHANS_N Orfãos encontrados"
     echo "$ORPHANS"
     step "Removendo Orfãos..."

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -o pipefail
-VER="2.9.5 (Yogourt)"
+VER="2.9.8 (Yogourt)"
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6)
 REAL_HOME=${REAL_HOME:-$HOME}
 MODULES_DIR="$REAL_HOME/.config/jay/modules"
@@ -19,8 +19,9 @@ CONTINUE=":: "
 step() { echo -e "${CYAN} $CONTINUE ${NC}${1}"; }
 success() { echo -e "${GREEN} $OK ${NC}${1}"; }
 error() { echo -e "${RED} $ERROR ${NC}${1}"; exit 1; }
+
 err01() {
-    echo -e -n "${CYAN} $ALERT ${NC}" && echo "argumento invalido '$ACTION'"
+    echo -e "$ALERT opção invalida '$ACTION'"
     exit 1
 }
 err02() {
@@ -34,10 +35,19 @@ err04() {
     echo -e "${RED}$ERROR Módulo crítico '$MISSING_MODULE' não encontrado${NC}\n -> saindo com status 1"
     exit 1
 }
-err05() {
-    echo -e "${RED}$ERROR Erro interno: Variável CMD não definida para a ação '$ACTION'${NC}"
-    exit 1
-}
+
+
+[[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
+[[ ! -f "$MODULES_DIR/base" ]] && MISSING_MODULE="base" && err04
+[[ ! -f "$MODULES_DIR/log" ]] && MISSING_MODULE="log" && err04
+
+source "$MODULES_DIR/base"
+source "$MODULES_DIR/log"
+
+[[ -f "$MODULES_DIR/cache" ]] && source "$MODULES_DIR/cache" || MOD_1="false"
+[[ -f "$MODULES_DIR/search" ]] && source "$MODULES_DIR/search" || MOD_2="false"
+[[ -f "$MODULES_DIR/extra" ]] && source "$MODULES_DIR/extra" || MOD_3="false"
+
 help_message() {
     ver_msg
     echo -e "Uso: jay [comando] [opções] [pacotes]"
@@ -66,69 +76,47 @@ help_message() {
     exit 0
 }
 usage() {
-    echo -e "${RED} $ERROR Uso: jay <comando> <pacotes>${NC}"
+    echo -e "Uso: jay [comando] [opções] [pacotes]"
     exit 1
 }
+
 [[ -z "$1" ]] && usage
+
 RAW_CMD="$*"
 USE_FLATPAK=false
 AGRESSIVE_MODE=false
 FINAL_ARGS=()
 YAY_FLAGS=()
-ACTION=""
 EXIT_CODE=0
 KILL_DBLOCK=false
-CMD=""
-TAG=""
-FLAT_CMD=""
 LIST_AUR=false
+
 for arg in "$@"; do
     case "$arg" in
         install|-i|remove|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|refresh|-r|slog|-sl|--fix-keys|clog|-cl|modules|-M|--check-updates|--diff)
             [[ -z "$ACTION" ]] && ACTION="$arg" || FINAL_ARGS+=("$arg")
         ;;
-        -v|--version)
-            ver_msg
-            exit 0
-        ;;
-        -h|--help)
-            help_message
-        ;;
-        -f|--flatpak)
-            USE_FLATPAK=true
-        ;;
-        -A)
-            AGRESSIVE_MODE=true
-        ;;
-        --list-aur)
-            LIST_AUR=true
-        ;;
-        --kill-dblck)
-            KILL_DBLOCK=true
-        ;;
-        -)
-            err02
-        ;;
-        -*)
-            YAY_FLAGS+=("$arg")
-        ;;
-        *)
-            FINAL_ARGS+=("$arg")
-        ;;
+        -v|--version) ver_msg; exit 0 ;;
+        -h|--help) help_message ;;
+        -f|--flatpak) USE_FLATPAK=true ;;
+        -A) AGRESSIVE_MODE=true ;;
+        --list-aur) LIST_AUR=true ;;
+        --kill-dblck) KILL_DBLOCK=true ;;
+        -) err02 ;;
+        -*) YAY_FLAGS+=("$arg") ;;
+        *) FINAL_ARGS+=("$arg") ;;
     esac
 done
+
 if [[ -z "$ACTION" && ${#FINAL_ARGS[@]} -gt 0 ]]; then
     ACTION="${FINAL_ARGS[0]}"
     FINAL_ARGS=("${FINAL_ARGS[@]:1}")
 fi
-[[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
-[[ ! -f "$MODULES_DIR/base" ]] && MISSING_MODULE="base" && err04
-[[ ! -f "$MODULES_DIR/log" ]] && MISSING_MODULE="log" && err04
-source "$MODULES_DIR/base"
-source "$MODULES_DIR/log"
-[[ -f "$MODULES_DIR/cache" ]] && source "$MODULES_DIR/cache" || MOD_1="false"
-[[ -f "$MODULES_DIR/search" ]] && source "$MODULES_DIR/search" || MOD_2="false"
-[[ -f "$MODULES_DIR/extra" ]] && source "$MODULES_DIR/extra" || MOD_3="false"
+
+if [[ -z "$ACTION" ]]; then
+    ACTION="${YAY_FLAGS[0]:-$1}"
+fi
+
 logger() {
     local tag="$1"
     local info="$2"
@@ -136,6 +124,7 @@ logger() {
     printf -v date_str '%(%H:%M - %d/%m/%Y)T' -1
     echo "($date_str) | $tag | $info" >> "$LOG_FILE"
 }
+
 case "$ACTION" in
     "-") err02 ;;
     install|-i) ins ;;
@@ -152,18 +141,17 @@ case "$ACTION" in
     slog|-sl) show_logs ;;
     clog|-cl) clear_logs ;;
     modules|-M) query_modules ;;
-    "") usage ;;
     *) err01 ;;
 esac
+
 [[ "$TAG" == "SKIP" ]] && exit 0
-[[ "$ACTION" =~ ^(install|remove|-i|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|refresh|-r|--fix-keys|--check-updates|--diff)$ ]] && [[ -z "$CMD" ]] && err05
 [[ "$ACTION" =~ ^(install|remove|-i|-rm)$ && ${#FINAL_ARGS[@]} -eq 0 ]] && error "Informe ao menos um pacote"
 command -v yay &>/dev/null || error "yay não encontrado"
 TMP_OUT=$(mktemp) || error "Falha ao criar arquivo temporário"
 trap 'rm -f "$TMP_OUT"' EXIT
 if [[ -n "$ACTION" ]]; then
     [[ "$AGRESSIVE_MODE" == "true" ]] && echo -e "${RED} $ALERT Modo agressivo ativado!${NC}"
-    [[ ! "$ACTION" =~ ^(modules|-M|slog|-sl|clog|-cl)$ ]] && step "Executando: $ACTION"
+    [[ ! "$ACTION" =~ ^(modules|-M|-m|mirrors)$ ]] && step "Executando: $ACTION"
 fi
 if [[ "$KILL_DBLOCK" == "true" ]]; then
     step "Verificando trava do pacman..."

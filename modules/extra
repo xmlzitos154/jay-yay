@@ -7,6 +7,7 @@ list_aur() {
     local count=$(yay -Qm | wc -l)
     echo -e "\n${GREEN}$OK${NC} Total de $count pacotes AUR encontrados."
 }
+
 refresh_mirrors() {
     tester
     echo "$WARNING Procurando mirrors..."

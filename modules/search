@@ -22,5 +22,5 @@ check_updates() {
     fi
     echo -e "${YELLOW} $WARNING $UPDS Atualizações encontradas: ${NC}"
     echo " $(checkupdates)"
-    exit 1
+    exit 0
 }
