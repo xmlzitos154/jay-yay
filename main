@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
+VER="3.2.2"
 set -o pipefail
-VER="3.2.0"
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
 MODULES_DIR="$REAL_HOME/.config/jay/modules"; LOG_FILE="$REAL_HOME/.cache/jaylog.txt"; CONFIG_DIR="$REAL_HOME/.config/jay"
-
 CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'; ALERT="[!]"; ERROR="[x]"; COMPLETE="[✓]"; NOTE="[*]"; CC=":: "
 
 step() { echo -e "${CYAN} $CC ${NC}${1}"; }
@@ -40,7 +39,6 @@ done
 [[ -z "$ACTION" ]] && ACTION="${YAY_FLAGS[0]:-$1}"
 
 case "$ACTION" in
-    "-") err02 ;;
     install|-i) ins ;;
     remove|-rm) rmv ;;
     refresh|-r) rfs ;;
