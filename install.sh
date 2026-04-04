@@ -76,7 +76,7 @@ EOF
 }
 
 debug() { 
-    title; echo -e "${Y}${B}[ DEBUG MODE ]${NC}"; echo "Ações disponíveis:"; echo "  35ab - Instalar UM módulo específico"; echo "  44aa - Reinstalar TODOS os módulos"; echo "  35a6 - Remover UM módulo específico"; echo "  s4a7 - Limpar pasta de módulos"; echo ""; read -p " >> " DBG
+    -title; echo -e "${Y}${B}[ DEBUG MODE ]${NC}"; echo "Ações disponíveis:"; echo "  35ab - Instalar UM módulo específico"; echo "  44aa - Reinstalar TODOS os módulos"; echo "  35a6 - Remover UM módulo específico"; echo "  s4a7 - Limpar pasta de módulos"; echo ""; read -p " >> " DBG
     case "$DBG" in
         "s4a7") rm -rf "$CONFIG_DIRECTORY/modules/"*; success "Todos os módulos foram pro espaço." ;;
         "35ab")

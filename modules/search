@@ -15,12 +15,12 @@ query() {
 check_updates() {
     tester
     step "Procurando pacotes desatualizados..."
-    UPDS="$(checkupdates 2>/dev/null | wc -l)"
-    if [[ "$UPDS" == "0" ]]; then
+    UPDS="$(checkupdates)"
+    UPDS_N="$(checkupdates 2>/dev/null | wc -l)"
+    if [[ "$UPDS_N" == "0" ]]; then
         success "Nenhuma atualização encontrada."
-        exit 0
     fi
     echo -e "${YELLOW} $NOTE $UPDS Atualizações encontradas: ${NC}"
-    echo " $(checkupdates)"
-    exit 0
+    echo "$UPDS"
+    logger "FOUND UPDATES" "$UPDS"
 }
