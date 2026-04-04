@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -o pipefail
-VER="3.1.5"
+VER="3.2.0"
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
 MODULES_DIR="$REAL_HOME/.config/jay/modules"; LOG_FILE="$REAL_HOME/.cache/jaylog.txt"; CONFIG_DIR="$REAL_HOME/.config/jay"
 
@@ -56,29 +56,6 @@ case "$ACTION" in
     clog|-cl) clear_logs ;;
     *) err01 ;;
 esac
-
-run_flatpak_logic() {
-    [[ "$USE_FLATPAK" != "true" ]] && return
-    command -v flatpak &>/dev/null || return
-    case "$ACTION" in
-        update|-u)
-            step "Atualizando Flatpaks..."
-            flatpak update -y
-            EXIT_CODE=$?
-        ;;
-        search|-s)
-            [[ -n "$FLAT_CMD" ]] && step "Procurando no Flatpak..." && flatpak "$FLAT_CMD" "${FINAL_ARGS[@]}"
-        ;;
-        *)
-            if [[ $EXIT_CODE -ne 0 && -n "$FLAT_CMD" ]] && grep -qiE "target not found|Nenhum pacote" "$TMP_OUT"; then
-                echo -e "\n${YELLOW} $NOTE AUR falhou. Tentando Flatpak...${NC}\n"
-                flatpak "$FLAT_CMD" -y "${FINAL_ARGS[@]}"
-                EXIT_CODE=$?
-                [[ $EXIT_CODE -eq 0 ]] && TAG="[FLATPAK]"
-            fi
-        ;;
-    esac
-}
 
 [[ "$TAG" == "SKIP" ]] && exit 0
 [[ "$ACTION" =~ ^(install|remove|-i|-rm)$ && ${#FINAL_ARGS[@]} -eq 0 ]] && error "Informe ao menos um pacote"
