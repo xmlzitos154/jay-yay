@@ -1,12 +1,5 @@
 #!/usr/bin/env bash
 
-err01() { echo -e "$ALERT opção invalida '$ACTION'" && exit 1; }
-err02() { echo -e -n "${CYAN} $ALERT ${NC}" && echo "argumento invalido '-'" && exit 1; }
-err03() { echo -e "${RED}$ERROR Módulo crítico '$MISSING_MODULE' não encontrado${NC}\n -> saindo com status 1" && exit 1; }
-err04() { error "Falha ao criar arquivo temporário"; }
-usage() { echo -e "Uso: jay [comando] [opções] [pacotes]" && exit 1; }
-ver_msg() { echo -e "\n ${CYAN}-> JAY (Just Another Yogourt) - Version $VER ${NC}\n"; }
-
 help_message() {
     ver_msg
     echo -e "Uso: jay [comando] [opções] [pacotes]"

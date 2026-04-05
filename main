@@ -9,6 +9,14 @@ step() { echo -e "${CYAN} $CC ${NC}${1}"; }
 success() { echo -e "${GREEN} $COMPLETE ${NC}${1}"; }
 error() { echo -e "${RED} $ERROR ${NC}${1}"; exit 1; }
 
+err01() { echo -e "$ALERT opção invalida '$ACTION'" && exit 1; }
+err02() { echo -e -n "${CYAN} $ALERT ${NC}" && echo "argumento invalido '-'" && exit 1; }
+err03() { echo -e "${RED}$ERROR Módulo crítico '$MISSING_MODULE' não encontrado${NC}\n -> saindo com status 1" && exit 1; }
+err04() { error "Falha ao criar arquivo temporário"; }
+usage() { echo -e "Uso: jay [comando] [opções] [pacotes]" && exit 1; }
+ver_msg() { echo -e "\n ${CYAN}-> JAY (Just Another Yogourt) - Version $VER ${NC}\n"; }
+
+
 [[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
 [[ ! -w "$LOG_FILE" ]] && sudo chown "${SUDO_USER:-$USER}":"${SUDO_USER:-$USER}" "$LOG_FILE" 2>/dev/null
 [[ ! -f "$MODULES_DIR/base" ]] && MISSING_MODULE="base" && err03 || source "$MODULES_DIR/base"
