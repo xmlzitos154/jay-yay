@@ -81,7 +81,7 @@ esac
 [[ "$TAG" == "SKIP" ]] && exit 0
 
 case "$ACTION" in
-    search|-s) yay ${CMD:?} "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" --noconfirm --nodiffmenu --noeditmenu 2>&1 | tee "$TMP_OUT"; EXIT_CODE=${PIPESTATUS[0]}; run_flatpak_logic ;;
+    search|-s) yay ${CMD:?} "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" --noconfirm 2>&1 | tee "$TMP_OUT"; EXIT_CODE=${PIPESTATUS[0]}; run_flatpak_logic ;;
     *) if [[ -n "$CMD" ]]; then
             yay "$CMD" "${FINAL_ARGS[@]}" "${YAY_FLAGS[@]}" 2>&1 | tee "$TMP_OUT"
             EXIT_CODE=${PIPESTATUS[0]}
