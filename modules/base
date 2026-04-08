@@ -77,7 +77,7 @@ upd() {
 
 rfs() {
     tester
-    CMD="-Syy"
-    TAG="REFRESHED MIRRORS"
+    CMD="-Syyu"
+    TAG="REFRESHED MIRRORS & SYSTEM UPGRADED"
     FLAT_CMD="SKIP"
 }
