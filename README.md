@@ -80,5 +80,5 @@ JAY automatically tracks your activity in: $HOME/.cache/joylog.txt
 It stores the timestamp, the action taken, and whether it was successful. Perfect for those "Wait, when did I install this?" moments.
 🛡️ Contributing
 
-This project is currently in Beta (v0.5.0). Feel free to open issues or PRs to improve the logic!
-Version 0.4.0 (Legacy)
+This project is currently in Beta. Feel free to open issues or PRs to improve the logic!
+Version 0.5.0 (Legacy)
