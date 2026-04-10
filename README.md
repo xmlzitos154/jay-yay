@@ -1,10 +1,10 @@
-# 🍦 JAY — Just Another Yogourt
-> **A lightweight, human-friendly wrapper for `yay` with Flatpak integration.**
-
 [![Bash](https://img.shields.io/badge/Language-Bash-4EAA25?style=flat-square&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
 [![Arch Linux](https://img.shields.io/badge/OS-Arch_Linux-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://archlinux.org/)
 
 [![Jay-bin](https://img.shields.io/badge/JAY_BIN-v3.3.6-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-bin)
+
+# 🍦 JAY — Just Another Yogourt
+> **A lightweight, human-friendly wrapper for `yay` with Flatpak integration.**
 
 JAY is a **powerful yet simple** wrapper designed to make AUR management intuitive. No more memorizing cryptic flags like `-Syyu` — just use plain English and let JAY handle the rest.
 
