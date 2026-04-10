@@ -24,11 +24,10 @@ Bash
 sudo pacman -S --needed git base-devel
 ```
 📥 Installation
-Bash
 
 ```
-git clone https://github.com/xmlzitos154/JAY-aur-helper.git
-cd JAY-aur-helper
+git clone https://github.com/xmlzitos154/jay
+cd jay
 chmod +x install.sh
 sudo ./install.sh
 ```
@@ -82,3 +81,4 @@ It stores the timestamp, the action taken, and whether it was successful. Perfec
 🛡️ Contributing
 
 This project is currently in Beta (v0.5.0). Feel free to open issues or PRs to improve the logic!
+Version 0.4.0 (Legacy)
