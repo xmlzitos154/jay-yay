@@ -17,12 +17,15 @@ check_updates() {
     tester
     step "Searching for updates..."
     UPDS="$(checkupdates 2>/dev/null)"
-    UPDS_N=$(echo "$UPDS" | wc -l)
-    if [[ "$UPDS_N" == "0" ]]; then
+    UPDS_N="$(echo "$UPDS" | grep -c .)"
+    UPDS_AUR="$(yay -Qua 2>/dev/null)"
+    UPDS_AUR_N="$(echo "$UPDS_AUR" | grep -c .)"
+    if [[ "$UPDS_N" == "0" ]] && [[ "$UPDS_AUR_N" == 0 ]]; then
         success "0 Updates found."
         exit 0
     fi
-    echo -e "${YELLOW} $NOTE $UPDS_N Updates found:${NC}"
+    echo -e "${YELLOW} $NOTE $UPDS_N Updates found ($AUR_UPDS_N in AUR):${NC}"
     echo "$UPDS"
-    logger "FOUND UPDATES" "$UPDS_N updates"
+    echo "$UPDS_AUR"
+    logger "FOUND UPDATES" "$UPDS_N updates ($UPDS_AUR_N in AUR)"
 }
