@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-VER="3.3.8"
+
+VER="3.4" ## Jay version 3.4 stable - release-candidate 1
+
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
 
 if [[ -d "./modules" ]]; then
     MODULES_DIR="./modules"
-elif [[ -d "/usr/share/jay/modules" ]]; then
+    elif [[ -d "/usr/share/jay/modules" ]]; then
     MODULES_DIR="/usr/share/jay/modules"
 else
     MODULES_DIR="$REAL_HOME/.config/jay/modules"
@@ -18,10 +20,9 @@ step() { echo -e "${CYAN} $CC ${NC}${1}"; }
 success() { echo -e "${GREEN} $COMPLETE ${NC}${1}"; }
 error() { echo -e "${RED} $ERROR ${NC}${1}"; exit 1; }
 
-err01() { echo -e "$ALERT invalid option '$ACTION'"; exit 1; }
-err02() { echo -e -n "${CYAN} $ALERT ${NC}" && echo "invalid argument '-'"; exit 1; }
-err03() { echo -e "${RED}$ERROR critic module '$MISSING_MODULE' not found${NC}\n -> exit with status 1" && exit 1; }
-err04() { error "Cannot create temporary file"; }
+err01() { echo -e "$ALERT invalid argument '$ACTION'"; exit 1; }
+err02() { echo -e "${RED}$ERROR critic module '$MISSING_MODULE' not found${NC}\n -> exit with status 1" && exit 1; }
+err03() { error "Cannot create temporary file"; }
 usage() { echo -e "Usage: jay [command] [options] [packages]"; exit 1; }
 ver_msg() { echo -e "\n ${CYAN}-> JAY (Just Another Yogourt) - Version $VER ${NC}\n"; }
 
@@ -30,7 +31,7 @@ load_mod() {
     if [[ -f "$MODULES_DIR/$mod" ]]; then
         source "$MODULES_DIR/$mod"
     else
-        MISSING_MODULE="$mod" && err03
+        MISSING_MODULE="$mod" && err02
     fi
 }
 
@@ -48,26 +49,26 @@ RAW_CMD="$*"; USE_FLATPAK=false; AGRESSIVE_MODE=false; FINAL_ARGS=(); YAY_FLAGS=
 
 for arg in "$@"; do
     case "$arg" in
-        install|-i|remove|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|refresh|-r|slog|-sl|--fix-keys|clog|-cl|--check-updates) [[ -z "$ACTION" ]] && ACTION="$arg" || FINAL_ARGS+=("$arg") ;;
+        install|-i|remove|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|refresh|-r|slog|-sl|--fix-keys|clog|-cl|--check-updates|-p|--search-for-path) [[ -z "$ACTION" ]] && ACTION="$arg" || FINAL_ARGS+=("$arg") ;;
         --kill-dblock) KILL_DBLOCK=true ;;
         -v|--version) ver_msg; exit 0 ;;
         -h|--help) help_message ;;
         -f|--flatpak) USE_FLATPAK=true ;;
         -A) AGRESSIVE_MODE=true ;;
         --list-aur) LIST_AUR=true ;;
-        -) err02 ;;
+        -) ACTION="-" && err01 ;;
         -*) YAY_FLAGS+=("$arg") ;;
         *) FINAL_ARGS+=("$arg") ;;
     esac
 done
 
 [[ -z "$ACTION" && ${#FINAL_ARGS[@]} -gt 0 ]] && ACTION="${FINAL_ARGS[0]}" && FINAL_ARGS=("${FINAL_ARGS[@]:1}")
-[[ -z "$ACTION" ]] && ACTION="${YAY_FLAGS[0]:-$1}"
+[[ -z "$ACTION" ]] && usage
 
 [[ "$ACTION" =~ ^(install|remove|-i|-rm)$ && ${#FINAL_ARGS[@]} -eq 0 ]] && error "specify at least one package"
 command -v yay &>/dev/null || error "yay not found"
 
-TMP_OUT=$(mktemp) || err04
+TMP_OUT=$(mktemp) || err03
 trap 'rm -f "$TMP_OUT" 2>/dev/null' EXIT
 
 if [[ -n "$ACTION" ]]; then
@@ -93,6 +94,7 @@ case "$ACTION" in
     --fix-keys) fix_keys ;;
     slog|-sl) show_logs ;;
     clog|-cl) clear_logs ;;
+    --search-for-path|-p) get_package_path "${FINAL_ARGS[@]}" ;;
     *) err01 ;;
 esac
 
@@ -110,7 +112,7 @@ esac
 
 if [[ "$EXIT_CODE" -eq 0 && -n "$TAG" ]]; then
     if grep -qiE "could not find|nenhum pacote|target not found" "$TMP_OUT"; then
-        logger "NOT FOUND" "${RAW_CMD}" 
+        logger "NOT FOUND" "${RAW_CMD}"
     else
         logger "${TAG:-SYSTEM}" "${RAW_CMD}"
     fi
