@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 clr_cache() {
     if [[ -d "$REAL_HOME/.cache/yay" ]]; then
         step "Cleaning AUR builds..."

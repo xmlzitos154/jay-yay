@@ -16,16 +16,17 @@ query() {
 check_updates() {
     tester
     step "Searching for updates..."
-    UPDS="$(checkupdates 2>/dev/null)"
-    UPDS_N="$(echo "$UPDS" | grep -c .)"
-    UPDS_AUR="$(yay -Qua 2>/dev/null)"
-    UPDS_AUR_N="$(echo "$UPDS_AUR" | grep -c .)"
-    if [[ "$UPDS_N" == "0" ]] && [[ "$UPDS_AUR_N" == 0 ]]; then
-        success "0 Updates found."
+    raw_upds=$(checkupdates 2>/dev/null)
+    raw_aur=$(yay -Qua 2>/dev/null)
+    [[ -n "$raw_upds" ]] && UPDS_N=$(echo "$raw_upds" | grep -c .) || UPDS_N=0
+    [[ -n "$raw_aur" ]] && UPDS_AUR_N=$(echo "$raw_aur" | grep -c .) || UPDS_AUR_N=0
+    if [[ "$UPDS_N" -eq 0 && "$UPDS_AUR_N" -eq 0 ]]; then
+        success "nothing to do."
+        logger "NO UPDATES FOUND" "--check-updates"
         exit 0
     fi
-    echo -e "${YELLOW} $NOTE $UPDS_N Updates found ($AUR_UPDS_N in AUR):${NC}"
-    echo "$UPDS"
-    echo "$UPDS_AUR"
-    logger "FOUND UPDATES" "$UPDS_N updates ($UPDS_AUR_N in AUR)"
+    echo -e "${YELLOW} $NOTE $((UPDS_N + UPDS_AUR_N)) Updates found ($UPDS_AUR_N in AUR):${NC}"
+    [[ "$UPDS_N" -gt 0 ]] && echo "$raw_upds"
+    [[ "$UPDS_AUR_N" -gt 0 ]] && echo "$raw_aur"
+    logger "FOUND UPDATES" "$((UPDS_N + UPDS_AUR_N)) updates ($UPDS_AUR_N in AUR)"
 }
