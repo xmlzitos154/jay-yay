@@ -83,6 +83,6 @@ Keep track of your system changes:
 License
 
 Distributed under the MIT License. Created by xmlzitos154.
-Version 3.3.7
+Version 3.3.8
 
 Tip: If you like JAY, don't forget to leave a star to support the project!
