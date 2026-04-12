@@ -6,24 +6,24 @@ help_message() {
     echo -e "Uso: jay [ -i | -rm | -s | -u ] [ -f | --flatpak ] [ --noconfirm ]"
     echo -e "Uso: jay [ -q | query ] [ --list-aur ]"
     echo -e "Options:\n"
-    echo -e "-h,  --help         Show this message again"
-    echo -e "-i,  install        Sync/install packages"
-    echo -e "-rm, remove         Remove packages (Use '-A' to activate the Agressive mode)"
-    echo -e "-u,  update         Update the system"
-    echo -e "-r,  refresh        Refresh and upgrade the system"
+    echo -e "-h, --help            Show this message again"
+    echo -e "-i, install           Sync/install packages"
+    echo -e "-rm, remove           Remove packages (Use '-A' to activate the Agressive mode)"
+    echo -e "-u, update            Update the system"
+    echo -e "-r, refresh           Refresh and upgrade the system"
     if [[ "$MOD_2" != "false" ]]; then
-        echo -e "-s,  search         search packages in AUR"
-        echo -e "-q,  query          Query local packages"
-        echo -e "-p,  --path         Search for binary path"
+        echo -e "-s, search            search packages in AUR"
+        echo -e "-q, query             Query local packages"
+        echo -e "-p, --path-to-binary  Search for binary path"
     fi
     if [[ "$MOD_1" != "false" ]]; then
-        echo -e "-o,  orphan         Remove non-necessary packages"
-        echo -e "-c,  cache          Clear all pacman cache"
+        echo -e "-o, orphan            Remove non-necessary packages"
+        echo -e "-c, cache             Clear all pacman cache"
     fi
     if [[ "$MOD_3" != "false" ]]; then
-        echo -e "-m, mirrors         Search for faster repos"
-        echo -e "--check-updates     Search for avaliable updates"
-        echo -e "--fix-keys          Restore invalid GPG keys"
+        echo -e "-m, mirrors           Search for faster repos"
+        echo -e "--check-updates       Search for avaliable updates"
+        echo -e "--fix-keys            Restore invalid GPG keys"
     fi
     exit 0
 }

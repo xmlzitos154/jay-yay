@@ -11,6 +11,7 @@ query() {
     CMD="-Qs"
     TAG="LOCAL QUERY"
     [[ "$LIST_AUR" == true ]] && list_aur && TAG="SKIP" && return
+    [[ "$PTB" == true ]] && get_package_path "${FINAL_ARGS[@]}" && TAG="SKIP" && return
 }
 
 check_updates() {
@@ -33,7 +34,7 @@ check_updates() {
 
 get_package_path() {
     local pkg="$1"
-    [[ -z "$pkg" ]] && error "Provide a package name."
+    [[ -z "$pkg" ]] && echo "$ALERT Provide a package name." && exit 1
     if pacman -Qi "$pkg" &>/dev/null; then
         step "Files for package: ${pkg}"
         local bins=$(pacman -Ql "$pkg" | grep '/bin/' | cut -d' ' -f2-)
@@ -47,6 +48,6 @@ get_package_path() {
         logger "PATH SEARCH" "$pkg"
     else
         logger "PATH SEARCH FAILED" "$pkg"
-        error "Package '$pkg' is not installed."
+        echo "$ALERT Package '$pkg' is not installed."; exit 1
     fi
 }
