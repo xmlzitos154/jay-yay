@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER="3.4" ## Jay version 3.4 stable - release-candidate 2
+VER="3.4.1" ## Jay version 3.4.1-1
 
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
@@ -45,17 +45,18 @@ load_mod "log"
 [[ -f "$MODULES_DIR/extra" ]] && source "$MODULES_DIR/extra" || MOD_3="false"
 [[ -z "$1" ]] && usage
 
-RAW_CMD="$*"; USE_FLATPAK=false; AGRESSIVE_MODE=false; FINAL_ARGS=(); YAY_FLAGS=(); EXIT_CODE=0; KILL_DBLOCK=false; LIST_AUR=false
+RAW_CMD="$*"; USE_FLATPAK=false; PTB=false; AGRESSIVE_MODE=false; FINAL_ARGS=(); YAY_FLAGS=(); EXIT_CODE=0; KILL_DBLOCK=false; LIST_AUR=false
 
 for arg in "$@"; do
     case "$arg" in
-        install|-i|remove|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|refresh|-r|slog|-sl|--fix-keys|clog|-cl|--check-updates|-p|--path) [[ -z "$ACTION" ]] && ACTION="$arg" || FINAL_ARGS+=("$arg") ;;
+        install|-i|remove|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|refresh|-r|slog|-sl|--fix-keys|clog|-cl|--check-updates) [[ -z "$ACTION" ]] && ACTION="$arg" || FINAL_ARGS+=("$arg") ;;
         --kill-dblock) KILL_DBLOCK=true ;;
         -v|--version) ver_msg; exit 0 ;;
         -h|--help) help_message ;;
         -f|--flatpak) USE_FLATPAK=true ;;
         -A) AGRESSIVE_MODE=true ;;
         --list-aur) LIST_AUR=true ;;
+        -p|--path-to-binary) PTB=true ;;
         -) ACTION="-" && err01 ;;
         -*) YAY_FLAGS+=("$arg") ;;
         *) FINAL_ARGS+=("$arg") ;;
@@ -94,7 +95,6 @@ case "$ACTION" in
     --fix-keys) fix_keys ;;
     slog|-sl) show_logs ;;
     clog|-cl) clear_logs ;;
-    --path|-p) get_package_path "${FINAL_ARGS[@]}" ;;
     *) err01 ;;
 esac
 
