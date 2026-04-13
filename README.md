@@ -28,7 +28,7 @@ Ensure you have the essentials installed before running JAY:
 sudo pacman -S --needed git base-devel yay
 ```
 # Installation
-Sorce
+Source
 
 Just run these commands:
 ```
@@ -72,6 +72,8 @@ Power-User Options
 
     --check-updates: Search for updates in AUR
 
+    -p, --path-to-binary: use with query to search for the package path 
+
 Log Management
 
 Keep track of your system changes:
@@ -83,6 +85,6 @@ Keep track of your system changes:
 License
 
 Distributed under the MIT License. Created by xmlzitos154.
-Version 3.4 stable
+Version 3.4.2
 
 Tip: If you like JAY, don't forget to leave a star to support the project!
