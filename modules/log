@@ -8,14 +8,17 @@ logger() {
     echo "[$date_str] [EXIT STATUS $status] [$tag] -> $info" >> "$LOG_FILE"
 }
 
-show_logs() {
-    [[ ! -s "$LOG_FILE" ]] && echo "$NOTE The log file is empty." && exit 0
-    column -t -s '|' "$LOG_FILE"
-    exit 0
-}
-
-clear_logs() {
-    > "$LOG_FILE"
-    echo "$COMPLETE Cleared log file"
-    exit 0
+log_acts() {
+    case "$LOG_FUNC" in
+        "sl")
+            [[ ! -s "$LOG_FILE" ]] && echo "$NOTE The log file is empty." && exit 0
+            cat "$LOG_FILE"
+            exit 0
+        ;;
+        "cl")
+            > "$LOG_FILE"
+            echo "$COMPLETE Cleared log file"
+            exit 0
+        ;;
+    esac
 }
