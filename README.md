@@ -82,9 +82,19 @@ Keep track of your system changes:
 
     jay -cl: Clears the log file.
 
+Backup Management
+
+Restore or create a backup of your packages:
+```
+   jay --create-backup: create a backup file
+
+   jay --restore-backup: restore packages to original instalation (use --path to specify the path to backup file)
+
+```
+
 License
 
 Distributed under the MIT License. Created by xmlzitos154.
-Version 3.4.5
+Version 3.5 stable
 
 Tip: If you like JAY, don't forget to leave a star to support the project!
