@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VER="3.5"
+VER="3.5.1"
 
 ver_msg() { echo -e "\njay v$VER - rc-1 stable\n"; }
 
@@ -20,16 +20,17 @@ err02() { echo -e "${RED}$ERROR Cannot create temporary file"; exit 1; }
 err03() { echo -e "${RED}$ERROR yay not found"; exit 1; }
 usage() { echo -e "Usage: jay [command] [options] [packages]"; exit 1; }
 
-### START OF COMANDS SESSION ###
+#################################
+### START OF COMMANDS SESSION ###
+#################################
 
 ## BASE
-
 help_message() {
     ver_msg
-    echo -e "Uso: jay [comando] [opções] [pacotes]"
-    echo -e "Uso: jay [ -i | -rm | -s | -u ] [ -f | --flatpak ] [ --noconfirm ]"
-    echo -e "Uso: jay [ -q | query ] [ --list-aur ]"
-    echo -e "Uso: jay [--create-backup | --restore-backup ] [--path /path/to/backup/file.txt ]"
+    echo -e "Use: jay [command] [options] [packages]"
+    echo -e "Use: jay [ -i | -rm | -s | -u ] [ -f | --flatpak ] [ --noconfirm ]"
+    echo -e "Use: jay [ -q | query ] [ --list-aur ]"
+    echo -e "Use: jay [ --create-backup | --restore-backup ] [ --path /path/to/backup/file.txt ]"
     echo -e "Options:\n"
     echo -e "-h, --help            Show this message again"
     echo -e "-i, install           Sync/install packages"
@@ -152,8 +153,7 @@ remove_orphans() {
 
 check_conf() {
     step "Searching for .pacnew/.pacsave files..."
-    PACNEWS=$(find /etc -regextype posix-extended \
-    -regex ".+\.pac(new|save)" 2>/dev/null)
+    PACNEWS=$(find /etc -regextype posix-extended -regex ".+\.pac(new|save)" 2>/dev/null)
     if [[ -z "$PACNEWS" ]]; then
         success "All clear! No conflicts found in /etc."
     else
@@ -206,7 +206,6 @@ fix_keys() {
     yay -S archlinux-keyring --noconfirm --needed &>/dev/null
     if [[ -f "$TMP_OUT" ]]; then
         local keys=$(grep -oP '(?<=key\s)([A-F0-9]{16,})|(?<=ID\s)([A-F0-9]{16,})' "$TMP_OUT" | sort -u)
-        
         if [[ -n "$keys" ]]; then
             for key in $keys; do
                 step "Importing key: $key"
@@ -345,8 +344,9 @@ get_package_path() {
         echo "$ALERT Package '$pkg' is not installed."; exit 1
     fi
 }
-
+###############################
 ### END OF COMMANDS SESSION ###
+###############################
 
 [[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
 [[ ! -w "$LOG_FILE" ]] && sudo chown "${SUDO_USER:-$USER}":"${SUDO_USER:-$USER}" "$LOG_FILE" 2>/dev/null
