@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-VER="3.5.2"
+VER="3.5.3"
 
-ver_msg() { echo -e "\njay v$VER - rc-1 stable\n"; }
+ver_msg() { echo -e "\njay v$VER - rc-1\n"; }
 
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
@@ -74,8 +74,8 @@ run_flatpak() {
             [[ -n "$FLAT_CMD" ]] && step "Searching in Flatpak..." && flatpak "$FLAT_CMD" "${FINAL_ARGS[@]}"
         ;;
         *)
-            if [[ $EXIT_CODE -ne 0 && -n "$FLAT_CMD" ]] && grep -qiE "target not found|Nenhum pacote" "$TMP_OUT"; then
-                echo -e "\n${YELLOW} $NOTE AUR failed. Trying Flatpak...${NC}\n"
+            if [[ $EXIT_CODE -ne 0 ]] || grep -qiE "target not found|Nenhum pacote|não encontrado" "$TMP_OUT"; then
+                echo -e "\n${YELLOW} $NOTE Pacote não encontrado no AUR. Tentando Flatpak...${NC}\n"
                 flatpak "$FLAT_CMD" -y "${FINAL_ARGS[@]}"
                 EXIT_CODE=$?
                 [[ $EXIT_CODE -eq 0 ]] && TAG="FLATPAK"
