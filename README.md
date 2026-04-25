@@ -53,14 +53,23 @@ The syntax is straightforward: jay [command] [options] [packages]
 Primary Commands
 Command	Alias	Description
 install	-i	Sync and install packages (AUR/Repo)
+
 remove	-rm	Remove packages from the system
+
 update	-u	Full system update (AUR + Flatpaks)
+
 search	-s	Search for packages in repositories
+
 query	-q	Search for locally installed packages
+
 refresh	-r	Refresh and Upgrade package databases
+
 orphan	-o	Remove all orphaned dependencies
+
 cache	-c	Clear Pacman and AUR cache
+
 --ping: test if network is available
+
 Power-User Options
 
     -f, --flatpak: Enables hybrid search/update for Flatpaks.
@@ -96,5 +105,7 @@ Restore or create a backup of your packages:
 License
 
 Distributed under the MIT License. Created by xmlzitos154.
+
 Version 3.5.2
+
 Tip: If you like JAY, don't forget to leave a star to support the project!
