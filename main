@@ -75,7 +75,7 @@ run_flatpak() {
         ;;
         *)
             if [[ $EXIT_CODE -ne 0 ]] || grep -qiE "target not found|Nenhum pacote|não encontrado" "$TMP_OUT"; then
-                echo -e "\n${YELLOW} $NOTE Pacote não encontrado no AUR. Tentando Flatpak...${NC}\n"
+                echo -e "\n${YELLOW} $NOTE Package not found in AUR. Trying on Flatpak...${NC}\n"
                 flatpak "$FLAT_CMD" -y "${FINAL_ARGS[@]}"
                 EXIT_CODE=$?
                 [[ $EXIT_CODE -eq 0 ]] && TAG="FLATPAK"
