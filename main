@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-ver="3.5.6"
+ver="3.5.7"
 ver_msg() { echo -e "\njay v$ver - rc-1\n"; }
 
 set -o pipefail
@@ -22,7 +22,7 @@ usage() { echo -e "Usage: jay [command] [options] [packages]"; exit 1; }
 
 if command -v paru &>/dev/null; then
     backend="paru"
-elif command -v yay &>/dev/null; then
+    elif command -v yay &>/dev/null; then
     backend="yay"
 else
     backend="yay"
@@ -37,29 +37,27 @@ help_message() {
     ver_msg
     echo -e "Usage: jay [command] [options] [packages]"
     echo -e "Usage: jay [ -i | -rm | -s | -u ] [ -f | --flatpak ] [ --noconfirm ]"
-    echo -e "Usage: jay [ -q | query ] [ --list-aur ] [ -p | --path-to-binary ]"
+    echo -e "Usage: jay [ -q | query ] [ --list-aur ] [ --path-to-binary ]"
     echo -e "Usage: jay [ --create-backup | --restore-backup ] [ --path /path/to/backup/file.txt ]"
     echo -e "Usage: jay [ --backend ] [ yay | paru ]"
-    echo -e "Options:\n"
-    echo -e "-h, --help Show this message again"
-    echo -e "-i, install Sync/install packages"
-    echo -e "-rm, remove Remove packages (Use '-A' to activate the Agressive mode)"
-    echo -e "-u, update Update the system"
-    echo -e "-r, refresh Refresh and upgrade the system"
-    echo -e "-s, search search packages in AUR"
-    echo -e "-q, query Query local packages"
-    echo -e "-p, --path-to-binary Search for binary path (use with query)"
-    echo -e "-o, orphan Remove non-necessary packages"
-    echo -e "-c, cache Clear all pacman cache"
-    echo -e "-m, mirrors Search for faster repos"
-    echo -e "--check-updates Search for avaliable updates"
-    echo -e "--fix-keys Restore invalid GPG keys"
-    echo -e "--pacdiff Manage pacdiffs"
-    echo -e "--create-backup Create an backup file"
-    echo -e "--restore-backup Install packages listed on backup file"
-    echo -e "--ping Test if network is available"
-    echo -e "--backend Switches the aur helper between yay and paru to be used (Default: yay)"
-    echo -e " Use --path to specify path to the backup file\n"
+    echo -e "\nOptions:\n"
+    echo -e "-h, --help              Show this message again"
+    echo -e "-i, install             Sync/install packages"
+    echo -e "-rm, remove             Remove packages (Use '-A' to activate the Agressive mode)"
+    echo -e "-u, update              Update the system"
+    echo -e "-s, search              search packages in AUR"
+    echo -e "-q, query               Query local packages"
+    echo -e "-o, orphan              Remove non-necessary packages"
+    echo -e "-c, cache               Clear all pacman cache"
+    echo -e "-m, mirrors             Search for faster repos"
+    echo -e "--check-updates         Search for avaliable updates"
+    echo -e "--fix-keys              Restore invalid GPG keys"
+    echo -e "--pacdiff               Manage pacdiffs"
+    echo -e "--create-backup         Create an backup file"
+    echo -e "--restore-backup        Install packages listed on backup file"
+    echo -e "--path-to-binary        Search for binary path (use with query)"
+    echo -e "--ping                  Test if network is available"
+    echo -e "--backend               Switches the aur helper between yay and paru to be used (Default: yay)\n"
     exit 0
 }
 
@@ -119,13 +117,6 @@ upd() {
     CMD="-Syu"
     TAG="UPDATED"
     FLAT_CMD="update"
-}
-
-rfs() {
-    tester
-    CMD="-Syyu"
-    TAG="REFRESHED MIRRORS & SYSTEM UPGRADED"
-    FLAT_CMD="SKIP"
 }
 
 ## CACHE
@@ -239,7 +230,6 @@ backup_func() {
             "$backend" -Qqa > "$BACKUP_FILE"
             CHECKSUM=$(sha256sum "$BACKUP_FILE" | cut -d' ' -f1)
             echo "$CHECKSUM" > "$BACKUP_DIR/backup.sha256"
-            
             success "Backup created successfully in $BACKUP_FILE"
             logger "CREATED BACKUP" "$BACKUP_FILE"
             exit 0
@@ -362,7 +352,7 @@ RAW_CMD="$*"; USE_FLATPAK=false; PTBIN=false; AGRESSIVE_MODE=false; FINAL_ARGS=(
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|refresh|-r|slog|-sl|--fix-keys|clog|-cl|--check-updates)
+        --pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-sl|--fix-keys|clog|-cl|--check-updates)
             [[ -z "$ACTION" ]] && ACTION="$1" || FINAL_ARGS+=("$1")
         ;;
         --backend)
@@ -384,7 +374,7 @@ while [[ $# -gt 0 ]]; do
         -v|--version) ver_msg; exit 0 ;;
         -A) AGRESSIVE_MODE=true ;;
         --list-aur) LIST_AUR=true ;;
-        -p|--path-to-binary) PTBIN=true ;;
+        --path-to-binary) PTBIN=true ;;
         --backend)
             shift
             if [[ "$1" == "paru" || "$1" == "yay" ]]; then
@@ -394,7 +384,7 @@ while [[ $# -gt 0 ]]; do
             fi
         ;;
         -) ACTION="-" && err01 ;;
-        -*) YAY_FLAGS+=("$1") ;;
+        -*) echo -e "-> Opção desconhecida: '$1'. Use --help para ver as opções válidas."; exit 1 ;;
         *) FINAL_ARGS+=("$1") ;;
     esac
     shift
@@ -428,7 +418,6 @@ case "$ACTION" in
     --ping) tester && logger "TEST FOR NETWORK" "available" && exit 0 ;;
     install|-i) ins ;;
     remove|-rm) rmv ;;
-    refresh|-r) rfs ;;
     update|-u) upd ;;
     search|-s) searcher ;;
     query|-q) query ;;
