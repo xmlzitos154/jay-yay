@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-ver="3.5.7"
-ver_msg() { echo -e "\njay v$ver - rc-2\n"; }
+ver="3.6"
+ver_msg() { echo -e "\njay v$ver - rc-1\n"; }
 
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
@@ -25,7 +25,8 @@ if command -v paru &>/dev/null; then
     elif command -v yay &>/dev/null; then
     backend="yay"
 else
-    backend="yay"
+    echo -e "${YELLOW}$ALERT No AUR Helpers found. Using pacman instead (limited)${NC}"
+    backend="pacman"
 fi
 
 #################################
@@ -50,13 +51,14 @@ help_message() {
     echo -e "-o, orphan              Remove non-necessary packages"
     echo -e "-c, cache               Clear all pacman cache"
     echo -e "-m, mirrors             Search for faster repos"
-    echo -e "--check-updates         Search for avaliable updates"
+    echo -e "--check-updates         Search for available updates"
     echo -e "--fix-keys              Restore invalid GPG keys"
     echo -e "--pacdiff               Manage pacdiffs"
     echo -e "--create-backup         Create an backup file"
     echo -e "--restore-backup        Install packages listed on backup file"
     echo -e "--path-to-binary        Search for binary path (use with query)"
     echo -e "--ping                  Test if network is available"
+    echo -e "--view                  View PKGBUILD file of AUR Packages"
     echo -e "--backend               Switches the aur helper between yay and paru to be used (Default: yay)\n"
     exit 0
 }
@@ -93,7 +95,8 @@ tester() {
     if ping -c 1 -i 0.01 8.8.8.8 &>/dev/null; then
         success "Connection is active."
     else
-        echo -e "${RED}$ERROR ${NC}Network disconected. Verify your Wi-Fi/Cable."
+        # FIX: typo "disconected" -> "disconnected"
+        echo -e "${RED}$ERROR ${NC}Network disconnected. Verify your Wi-Fi/Cable."
         logger "TEST FOR NETWORK" "unavailable"
         exit 1
     fi
@@ -171,6 +174,21 @@ check_conf() {
 }
 
 ## BASE2
+view_pkgbuild() {
+    local pkg="$1"
+    [[ -z $pkg ]] && echo "$NOTE Specify one package." && exit 1
+    step "Searching PKGBUILD for $pkg..."
+    local content
+    content=$("$backend" -Gp "$pkg" 2>/dev/null)
+    if [[ -n "$content" ]]; then
+        echo -e "${CYAN}--- PKGBUILD: $pkg ---${NC}\n"
+        echo "$content" | less -R
+        TAG="VIEW PKGBUILD"
+    else
+        error "Can't find PKGBUILD for '$pkg'. Is it in the AUR?"
+    fi
+}
+
 list_aur() {
     step "Filtering packages installed via AUR..."
     pacman -Qm | column -t
@@ -205,7 +223,7 @@ refresh_mirrors() {
 
 fix_keys() {
     step "Starting GPG key recovery..."
-    "$backend" -S archlinux-keyring --noconfirm --needed &>/dev/null
+    "$backend" -S archlinux-keyring --noconfirm --needed 2>&1 | tee "$TMP_OUT" >/dev/null
     if [[ -f "$TMP_OUT" ]]; then
         local keys=$(grep -oP '(?<=key\s)([A-F0-9]{16,})|(?<=ID\s)([A-F0-9]{16,})' "$TMP_OUT" | sort -u)
         if [[ -n "$keys" ]]; then
@@ -239,12 +257,17 @@ backup_func() {
             if [[ ! -f "$BACKUP_FILE" ]]; then
                 error "Backup file not found."
             fi
-            CHECKSUM_FILE="${BACKUP_FILE%.txt}.sha256"
+            local backup_base="${BACKUP_FILE%.*}"
+            CHECKSUM_FILE="${backup_base}.sha256"
             if [[ ! -f "$CHECKSUM_FILE" ]]; then
                 error "Validation key not found. Backup may be invalid or corrupted."
             fi
             step "Validating backup integrity..."
-            if ! echo "$(cat $CHECKSUM_FILE) $BACKUP_FILE" | sha256sum --check --quiet 2>/dev/null; then
+            local stored_hash
+            stored_hash=$(cat "$CHECKSUM_FILE")
+            local actual_hash
+            actual_hash=$(sha256sum "$BACKUP_FILE" | cut -d' ' -f1)
+            if [[ "$stored_hash" != "$actual_hash" ]]; then
                 error "Backup validation failed. File may be corrupted or tampered."
             fi
             success "Backup integrity verified."
@@ -354,6 +377,9 @@ while [[ $# -gt 0 ]]; do
         --pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-rm|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-sl|--fix-keys|clog|-cl|--check-updates)
             [[ -z "$ACTION" ]] && ACTION="$1" || FINAL_ARGS+=("$1")
         ;;
+        --view)
+            [[ -z "$ACTION" ]] && ACTION="--view" || FINAL_ARGS+=("$1")
+        ;;
         --backend)
             shift
             if [[ "$1" == "paru" || "$1" == "yay" ]]; then
@@ -375,14 +401,6 @@ while [[ $# -gt 0 ]]; do
         --list-aur) LIST_AUR=true ;;
         --path-to-binary) PTBIN=true ;;
         --noconfirm) YAY_FLAGS+=("--noconfirm") ;;
-        --backend)
-            shift
-            if [[ "$1" == "paru" || "$1" == "yay" ]]; then
-                backend="$1"
-            else
-                error "Backend must be 'yay' or 'paru'"
-            fi
-        ;;
         -) ACTION="-" && err01 ;;
         -*) echo -e "-> Opção desconhecida: '$1'. Use --help para ver as opções válidas."; exit 1 ;;
         *) FINAL_ARGS+=("$1") ;;
@@ -429,6 +447,7 @@ case "$ACTION" in
     --pacdiff) check_conf ;;
     --create-backup) BACKUP_ACTION="create"; backup_func ;;
     --restore-backup) BACKUP_ACTION="restore"; backup_func ;;
+    --view) view_pkgbuild "${FINAL_ARGS[0]}"; exit 0 ;;
     *) err01 ;;
 esac
 
