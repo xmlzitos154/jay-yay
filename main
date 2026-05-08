@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-ver="5.1"; rc="1"
+ver="5.1"; rc="2"
 
 ## A Semantic AUR helper wrapper written in bashc
 
@@ -93,6 +93,8 @@ flatpak_only() {
         s|sr|src|search|-s)   FLAT_CMD="search" ;;
         q|qr|qur|query|-q)    FLAT_CMD="list" ;; # Listar apps instalados
         c|cc|cac|cache|-c)    FLAT_CMD="uninstall --unused" ;;
+        cu|check|--check-updates) FLAT_CMD="remote-ls --updates" ;;
+        
         *) error "Action '$ACTION' not supported in Flatpak-only mode." ;;
     esac
     flatpak $FLAT_CMD "${FINAL_ARGS[@]}"
