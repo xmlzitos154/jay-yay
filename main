@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-ver="5"; rc="1"
+ver="5.1"; rc="1"
 
 ## A Semantic AUR helper wrapper written in bashc
 
@@ -23,6 +23,7 @@ err02() { echo -e "${RED}$ERROR Cannot create temporary file"; exit 1; }
 err03() { echo -e "${RED}$ERROR the specified AUR Helper ($backend) not found"; exit 1; }
 err04() { echo -e "${RED}$ERROR Specified aur helper is not found or is not suported."; exit 1; }
 err05() { echo -e "${RED}$ERROR Don't use '$backend' with sudo."; exit 1; }
+err06() { echo -e "${RED}$ERROR Flatpak is not installed."; exit 1; }
 usage() { echo -e "Usage: jay [command] [options] [packages]"; exit 1; }
 
 [[ "$backend" != "pacman" && "$EUID" -eq 0 ]] && err05
@@ -72,8 +73,33 @@ help_message() {
     echo -e "--ping                  Test if network is available"
     echo -e "--view                  View PKGBUILD file of AUR Packages"
     echo -e "--statistics, stats     Show packages and system statistics"
+    echo -e "--flatpak-only          Use flatpak as backend"
     echo -e "--backend               Switches the aur helper between yay and paru to be used (Default: yay)\n"
     exit 0
+}
+
+#################################
+### START OF FLATPAK SESSION  ###
+#################################
+
+flatpak_only() {
+    ! command -v flatpak &>/dev/null && err06
+    echo -e "${GREEN} $CC ${NC}Using flatpak..."
+    
+    case "$ACTION" in
+        i|in|ins|install|-i)  FLAT_CMD="install" ;;
+        r|rm|rem|remove|-r)   FLAT_CMD="uninstall" ;;
+        u|up|upd|update|-u)   FLAT_CMD="update" ;;
+        s|sr|src|search|-s)   FLAT_CMD="search" ;;
+        q|qr|qur|query|-q)    FLAT_CMD="list" ;; # Listar apps instalados
+        c|cc|cac|cache|-c)    FLAT_CMD="uninstall --unused" ;;
+        *) error "Action '$ACTION' not supported in Flatpak-only mode." ;;
+    esac
+    flatpak $FLAT_CMD "${FINAL_ARGS[@]}"
+    EXIT_CODE=$?
+    TAG="FLATPAK_ONLY"
+    logger "$TAG" "$FLAT_CMD ${FINAL_ARGS[*]}"
+    exit $EXIT_CODE
 }
 
 run_flatpak() {
@@ -102,6 +128,10 @@ run_flatpak() {
         ;;
     esac
 }
+
+#################################
+###  END OF FLATPAK SESSION   ###
+#################################
 
 ins() {
     tester
@@ -453,6 +483,7 @@ while [[ $# -gt 0 ]]; do
         -h|--help) help_message ;;
         --info) inform; exit 0 ;;
         -f|--flatpak) USE_FLATPAK=true ;;
+        --flatpak-only) ONLY_FLATPAK=true ;;
         -v|--version) ver_msg; exit 0 ;;
         -A) AGRESSIVE_MODE=true ;;
         --path-to-binary) PTBIN=true ;;
@@ -493,6 +524,8 @@ if [[ -n "$ACTION" ]]; then
     pgrep -x pacman >/dev/null || pgrep -x "$backend" >/dev/null && error "Pacman/$backend is already running."
     [[ -f /var/lib/pacman/db.lck ]] && sudo rm /var/lib/pacman/db.lck && success "Database lock removed."
 fi
+
+[[ "$ONLY_FLATPAK" == "true" ]] && flatpak_only
 
 case "$ACTION" in
     show-logs|slog|-sl) LOG_FUNC="sl"; log_acts ;;

@@ -80,13 +80,15 @@ Power-User Options
 
     --noconfirm: Skips AUR confirmation prompts for automation.
 
-    --fix-keys: Fix GPG Keys issues
+    --fix-keys: Fix GPG Keys issues.
 
-    --check-updates: Search for updates in AUR
+    --check-updates: Search for updates in AUR.
 
-    --path-to-binary: use with query to search for the package path 
+    --path-to-binary: use with query to search for the package path .
 
-    --statistics, stats: Show packages and system statistics
+    --statistics, stats: Show packages and system statistics.
+
+    --flatpak-only: Use only flatpak as package manager.
 
 Log Management
 
@@ -116,6 +118,6 @@ License
 
 Distributed under the MIT License. Created by xmlzitos154.
 
-Version 5
+Version 5.1
 
 Tip: If you like JAY, don't forget to leave a star to support the project!
