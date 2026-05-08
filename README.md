@@ -70,6 +70,8 @@ cache	-c	Clear Pacman and AUR cache
 
 --pacdiff: Manage pacnew files on your device
 
+--view: read PKGBUILD of AUR packages
+
 Power-User Options
 
     -f, --flatpak: Enables hybrid search/update for Flatpaks.
@@ -83,6 +85,8 @@ Power-User Options
     --check-updates: Search for updates in AUR
 
     --path-to-binary: use with query to search for the package path 
+
+    --statistics, stats: Show packages and system statistics
 
 Log Management
 
@@ -112,6 +116,6 @@ License
 
 Distributed under the MIT License. Created by xmlzitos154.
 
-Version 4
+Version 5
 
 Tip: If you like JAY, don't forget to leave a star to support the project!
