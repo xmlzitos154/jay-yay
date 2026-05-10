@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-ver="5.1"; rc="2"
+ver="5.2"; rc="1"
 
 ## A Semantic AUR helper wrapper written in bashc
 
@@ -26,6 +26,20 @@ err05() { echo -e "${RED}$ERROR Don't use '$backend' with sudo."; exit 1; }
 err06() { echo -e "${RED}$ERROR Flatpak is not installed."; exit 1; }
 usage() { echo -e "Usage: jay [command] [options] [packages]"; exit 1; }
 
+if command -v yay &>/dev/null; then
+    echo -e "${GREEN} $CC ${NC}Using yay..."
+    backend="yay"
+    elif command -v paru &>/dev/null; then
+    echo -e " $NOTE paru detected, using paru..."
+    backend="paru"
+    elif command -v pikaur &>/dev/null; then
+    echo -e " $NOTE pikaur detected, using pikaur..."
+    backend="pikaur"
+else
+    echo -e "${YELLOW} $ALERT No AUR Helpers found. Using pacman instead (limited)${NC}"; backend="pacman"
+    [[ ! "$EUID" == "0" ]] && error "Pacman needs sudo to continue."
+fi
+
 [[ "$backend" != "pacman" && "$EUID" -eq 0 ]] && err05
 
 #################################
@@ -35,7 +49,7 @@ usage() { echo -e "Usage: jay [command] [options] [packages]"; exit 1; }
 ## NETWORK TESTER
 tester() {
     step "Testing network..."
-    if ping -c 1 -i 0.01 8.8.8.8 &>/dev/null; then
+    if ping -c 1 -i 0.1 8.8.8.8 &>/dev/null; then
         success "Connection is active."
     else
         echo -e "${RED}$ERROR ${NC}Network disconnected. Verify your Wi-Fi/Cable."
@@ -91,7 +105,7 @@ flatpak_only() {
         r|rm|rem|remove|-r)   FLAT_CMD="uninstall" ;;
         u|up|upd|update|-u)   FLAT_CMD="update" ;;
         s|sr|src|search|-s)   FLAT_CMD="search" ;;
-        q|qr|qur|query|-q)    FLAT_CMD="list" ;; # Listar apps instalados
+        q|qr|qur|query|-q)    FLAT_CMD="list" ;;
         c|cc|cac|cache|-c)    FLAT_CMD="uninstall --unused" ;;
         cu|check|--check-updates) FLAT_CMD="remote-ls --updates" ;;
         
@@ -106,7 +120,7 @@ flatpak_only() {
 
 run_flatpak() {
     [[ "$USE_FLATPAK" != "true" ]] && return
-    command -v flatpak &>/dev/null || return
+    command -v flatpak &>/dev/null || err06
     case "$ACTION" in
         update|-u)
             step "Updating Flatpaks..."
@@ -144,7 +158,7 @@ ins() {
 
 rmv() {
     CMD=$([[ "$AGRESSIVE_MODE" == "true" ]] && echo "-Rsn" || echo "-Rs")
-    TAG=$([[ "$AGRESSIVE_MODE" == "true" ]] && echo "REMOVE-AGRESSIVE" || echo "REMOVED")
+    TAG=$([[ "$AGRESSIVE_MODE" == "true" ]] && echo "REMOVED WITH -Rsn MODE" || echo "REMOVED")
     FLAT_CMD="uninstall"
 }
 
@@ -160,8 +174,7 @@ cache_mgr() {
     local cache_dir="$REAL_HOME/.cache/$backend"
     if [[ -d "$cache_dir" ]]; then
         step "Cleaning $backend builds..."
-        find "$cache_dir" -maxdepth 1 -type d \
-        -not -path "$cache_dir" -exec rm -rf {} +
+        find "$cache_dir" -maxdepth 1 -type d -not -path "$cache_dir" -exec rm -rf {} +
         success "Builds cleaned."
     fi
     if command -v flatpak &>/dev/null; then
@@ -220,20 +233,20 @@ show_stats() {
     local aur_cache_size="0"
     [[ -d "$REAL_HOME/.cache/$backend" ]] && aur_cache_size=$(du -sh "$REAL_HOME/.cache/$backend" | cut -f1)
     local heavy_pkgs=$(expac -S "%m\t%n"  2>/dev/null | sort -hr | head -5 | awk '{print $2 " (" $1/1024/1024 "MB)"}')
-    echo -e "\n${CYAN}${B}--- JAY SYSTEM STATS ---${NC}"
-    echo -e "${G}Packages:${NC}"
+    echo -e "\n${CYAN}--- JAY SYSTEM STATS ---${NC}"
+    echo -e "${GREEN}Packages:${NC}"
     echo -e "  $CC Native: $native_pkgs"
     echo -e "  $CC AUR:    $aur_pkgs"
     [[ $flat_pkgs -gt 0 ]] && echo -e "  $CC Flatpak: $flat_pkgs"
-    echo -e "\n${Y}Disk Usage (Cache):${NC}"
+    echo -e "\n${YELLOW}Disk Usage (Cache):${NC}"
     echo -e "  $CC Pacman DB: $cache_size"
     echo -e "  $CC System Born on: $install_date"
     echo -e "  $CC $backend Cache: $aur_cache_size"
     if command -v expac &>/dev/null; then
-        echo -e "\n${R}Heaviest Packages:${NC}"
+        echo -e "\n${RED}Heaviest Packages:${NC}"
         echo "$heavy_pkgs" | sed "s/^/  $CC /"
     else
-        echo -e "\n${Y}$NOTE Install 'expac' to see heaviest packages.${NC}"
+        echo -e "\n${YELLOW}$NOTE Install 'expac' to see heaviest packages.${NC}"
     fi
     echo -e "${CYAN}------------------------${NC}"
     TAG="STATS"
@@ -301,7 +314,7 @@ refresh_mirrors() {
 
 fix_keys() {
     step "Starting GPG key recovery..."
-    "$backend" -S archlinux-keyring --noconfirm --needed 2>&1 | tee "$TMP_OUT" >/dev/null
+    "$backend" -S archlinux-keyring --noconfirm --needed 2>&1 | tee "$TMP_OUT"
     if [[ -f "$TMP_OUT" ]]; then
         local keys=$(grep -oP '(?<=key\s)([A-F0-9]{16,})|(?<=ID\s)([A-F0-9]{16,})' "$TMP_OUT" | sort -u)
         if [[ -n "$keys" ]]; then
@@ -408,13 +421,14 @@ check_updates() {
     step "Searching for updates..."
     local tmp_repo=$(mktemp)
     local tmp_aur=$(mktemp)
-    local tmp_flat=$(mktemp)
     checkupdates > "$tmp_repo" 2>/dev/null &
     local pid_repo=$!
     "$backend" -Qua > "$tmp_aur" 2>/dev/null &
     local pid_aur=$!
     local pid_flat=""
+    local tmp_flat=""
     if [[ "$USE_FLATPAK" == "true" ]] && command -v flatpak &>/dev/null; then
+        tmp_flat=$(mktemp)
         flatpak remote-ls --updates > "$tmp_flat" 2>/dev/null &
         pid_flat=$!
     fi
@@ -426,7 +440,7 @@ check_updates() {
     local total=$((upds_n + upds_aur_n + upds_flat_n))
     if [[ "$total" -eq 0 ]]; then
         success "Your system is updated."
-        rm -f "$tmp_repo" "$tmp_aur" "$tmp_flat"
+        rm -f "$tmp_repo" "$tmp_aur" ${tmp_flat:+"$tmp_flat"}
         return
     fi
     local flat_info=""
@@ -437,7 +451,7 @@ check_updates() {
     if [[ "$USE_FLATPAK" == "true" && "$upds_flat_n" -gt 0 ]]; then
         echo -e "\nUpdates in Flatpak:\n${YELLOW}$(cat "$tmp_flat")${NC}"
     fi
-    rm -f "$tmp_repo" "$tmp_aur" "$tmp_flat"
+    rm -f "$tmp_repo" "$tmp_aur" ${tmp_flat:+"$tmp_flat"}
     logger "FOUND UPDATES" "$total updates (Flatpak: $USE_FLATPAK)"
 }
 
@@ -497,22 +511,7 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-if command -v yay &>/dev/null; then
-    echo -e "${GREEN} $CC ${NC}Using yay..."
-    backend="yay"
-    elif command -v paru &>/dev/null; then
-    echo -e " $NOTE paru detected, using paru..."
-    backend="paru"
-    elif command -v pikaur &>/dev/null; then
-    echo -e " $NOTE pikaur detected, using pikaur..."
-    backend="pikaur"
-else
-    echo -e "${YELLOW} $ALERT No AUR Helpers found. Using pacman instead (limited)${NC}"; backend="pacman"
-    [[ ! "$EUID" == "0" ]] && error "Pacman needs sudo to continue."
-fi
-
 [[ -z "$ACTION" && ${#FINAL_ARGS[@]} -gt 0 ]] && ACTION="${FINAL_ARGS[0]}" && FINAL_ARGS=("${FINAL_ARGS[@]:1}")
-[[ -z "$ACTION" ]] && ACTION="${YAY_FLAGS[0]:-$1}" && err01
 
 [[ "$ACTION" =~ ^(install|remove|-i|-r)$ && ${#FINAL_ARGS[@]} -eq 0 ]] && error "specify at least one package"
 
@@ -523,7 +522,7 @@ trap 'rm -f "$TMP_OUT" 2>/dev/null' EXIT
 
 if [[ -n "$ACTION" ]]; then
     [[ "$AGRESSIVE_MODE" == "true" ]] && echo -e "${RED} $NOTE Agressive mode enabled!${NC}"
-    pgrep -x pacman >/dev/null || pgrep -x "$backend" >/dev/null && error "Pacman/$backend is already running."
+    { pgrep -x pacman >/dev/null || pgrep -x "$backend" >/dev/null; } && error "Pacman/$backend is already running."
     [[ -f /var/lib/pacman/db.lck ]] && sudo rm /var/lib/pacman/db.lck && success "Database lock removed."
 fi
 
