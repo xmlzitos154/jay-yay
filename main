@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-ver="5.3"; rc="1"
+ver="5.3.1"; rc="1"
 
 ## JAY - A Semantic AUR helper wrapper written in bash
 
@@ -385,15 +385,12 @@ backup_func() {
 ## !LOGGER
 
 log_acts() {
-    echo "DEBUG LINES='$LOG_LINES'"
     case "$LOG_FUNC" in
         "sl")
+            cmd() { tail -n "$LOG_LINES" "$LOG_FILE"; }
+            [[ "$LOG_LINES" == "" || "$LOG_LINES" == "null" ]] && cmd() { cat "$LOG_FILE"; }
             [[ ! -s "$LOG_FILE" ]] && echo "$NOTE The log file is empty." && exit 0
-            if [[ -n "$LINES" ]]; then
-                tail -n "$LOG_LINES" "$LOG_FILE"
-            else
-                cat "$LOG_FILE"
-            fi
+            cmd
         ;;
         "cl")
             > "$LOG_FILE"
@@ -509,6 +506,7 @@ while [[ $# -gt 0 ]]; do
         --lines)
             shift
             LOG_LINES="$1"
+            [[ -z "$LOG_LINES" || "$LOG_LINES" == "" ]] && LOG_LINES="null"
         ;;
         -h|--help) help_message ;;
         --info) inform; exit 0 ;;
