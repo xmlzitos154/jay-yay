@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-ver="5.2"; rc="1"
+ver="5.3"; rc="1"
 
-## A Semantic AUR helper wrapper written in bashc
+## JAY - A Semantic AUR helper wrapper written in bash
 
 ver_msg() { echo -e "\njay v$ver - rc-$rc\n"; }
 inform() { echo -e " -> jay v$ver - release-candidate $rc - version codename 'Ice Cream'"; }
@@ -66,6 +66,7 @@ help_message() {
     echo -e "Usage: jay [-q | query] [--list-aur] [--path-to-binary]"
     echo -e "Usage: jay [--restore-backup] [--path /path/to/backup/file.txt]"
     echo -e "Usage: jay [--backend] [yay | paru]"
+    echo -e "Usage: jay [slog|-sl] [--lines LINES_TO_DISPLAY]"
     echo -e "\nOptions:\n"
     echo -e "-h, --help              Show this message again"
     echo -e "-v, --version           Show the actual program version"
@@ -85,6 +86,7 @@ help_message() {
     echo -e "--restore-backup        Install packages listed on backup file"
     echo -e "--path-to-binary        Search for binary path (use with query)"
     echo -e "--ping                  Test if network is available"
+    echo -e "--lines                 Specify number of lines to display on -sl/slog command"
     echo -e "--view                  View PKGBUILD file of AUR Packages"
     echo -e "--statistics, stats     Show packages and system statistics"
     echo -e "--flatpak-only          Use flatpak as backend"
@@ -148,7 +150,10 @@ run_flatpak() {
 #################################
 ###  END OF FLATPAK SESSION   ###
 #################################
+### START OF COMMANDS SESSION ###
+#################################
 
+## !BASE
 ins() {
     tester
     CMD="-S"
@@ -169,7 +174,7 @@ upd() {
     FLAT_CMD="update"
 }
 
-## CACHE
+## !CACHE
 cache_mgr() {
     local cache_dir="$REAL_HOME/.cache/$backend"
     if [[ -d "$cache_dir" ]]; then
@@ -219,7 +224,7 @@ check_conf() {
     TAG="CLEAR DIFFS"
 }
 
-## ETC
+## !ETC
 show_stats() {
     step "Gathering system statistics..."
     local native_pkgs=$(pacman -Qn | wc -l)
@@ -377,13 +382,18 @@ backup_func() {
     esac
 }
 
-## LOGGER
+## !LOGGER
+
 log_acts() {
+    echo "DEBUG LINES='$LOG_LINES'"
     case "$LOG_FUNC" in
         "sl")
             [[ ! -s "$LOG_FILE" ]] && echo "$NOTE The log file is empty." && exit 0
-            cat "$LOG_FILE"
-            exit 0
+            if [[ -n "$LINES" ]]; then
+                tail -n "$LOG_LINES" "$LOG_FILE"
+            else
+                cat "$LOG_FILE"
+            fi
         ;;
         "cl")
             > "$LOG_FILE"
@@ -401,7 +411,7 @@ logger() {
     echo "$date_str [Exit Status $status] [$tag] -> $info" >> "$LOG_FILE"
 }
 
-## SEARCH
+## !SEARCH
 searcher() {
     tester
     CMD="-Ss"
@@ -473,7 +483,7 @@ get_package_path() {
 [[ ! -w "$LOG_FILE" ]] && sudo chown "${SUDO_USER:-$USER}":"${SUDO_USER:-$USER}" "$LOG_FILE" 2>/dev/null
 [[ -z "$1" ]] && usage
 
-RAW_CMD="$*"; USE_FLATPAK=false; PTBIN=false; AGRESSIVE_MODE=false; FINAL_ARGS=(); YAY_FLAGS=(); EXIT_CODE=0; LIST_AUR=false
+RAW_CMD="$*"; USE_FLATPAK=false; PTBIN=false; AGRESSIVE_MODE=false; FINAL_ARGS=(); YAY_FLAGS=(); LOG_LINES=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -496,9 +506,13 @@ while [[ $# -gt 0 ]]; do
             [[ -z "$1" ]] && error "--path requires a file path argument"
             CUSTOM_PATH="$1"
         ;;
+        --lines)
+            shift
+            LOG_LINES="$1"
+        ;;
         -h|--help) help_message ;;
         --info) inform; exit 0 ;;
-        -f|--flatpak) USE_FLATPAK=true ;;
+        -f|f|\--flatpak) USE_FLATPAK=true ;;
         --flatpak-only) ONLY_FLATPAK=true ;;
         -v|--version) ver_msg; exit 0 ;;
         -A) AGRESSIVE_MODE=true ;;
