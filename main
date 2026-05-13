@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-ver="5.4"; rc="1"
+ver="5.5"; rc="1"
 
 ## JAY - A Semantic AUR helper wrapper written in bash
 
@@ -42,11 +42,29 @@ fi
 
 [[ "$backend" != "pacman" && "$EUID" -eq 0 ]] && err05
 
+log_rotate() {
+    local max_size=512000
+    local log_size
+    log_size=$(stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)
+    [[ "$log_size" -lt "$max_size" ]] && return
+    local log_size_hr
+    log_size_hr=$(du -sh "$LOG_FILE" | cut -f1)
+    echo -e "\n${YELLOW} $NOTE Log file is getting large ($log_size_hr).${NC}"
+    echo -e "${CYAN} $CC ${NC}Archive and rotate? [y/N]"
+    read -r -n 1 opt
+    echo
+    if [[ "$opt" =~ ^(y|Y)$ ]]; then
+        mv "$LOG_FILE" "${LOG_FILE}.1"
+        touch "$LOG_FILE"
+        success "Log rotated. Old log saved as jay.log.1"
+    fi
+}
+
 #################################
 ### START OF COMMANDS SESSION ###
 #################################
 
-## NETWORK TESTER
+## !NETWORK TESTER
 tester() {
     step "Testing network..."
     if ping -c 1 -i 0.1 8.8.8.8 &>/dev/null; then
@@ -58,7 +76,7 @@ tester() {
     fi
 }
 
-## BASE
+## !BASE
 help_message() {
     display_ver
     echo -e "Usage: jay [command] [options] [packages]"
@@ -78,6 +96,7 @@ help_message() {
     echo -e "-o, orphan              Remove non-necessary packages"
     echo -e "-c, cache               Clear all pacman cache"
     echo -e "-m, mirrors             Search for faster repos"
+    echo -e "why, depends            List dependencies of specified package"
     echo -e "--check-updates         Search for available updates"
     echo -e "--info                  Show more detailed informations of this program"
     echo -e "--fix-keys              Restore invalid GPG keys"
@@ -225,6 +244,31 @@ check_conf() {
 }
 
 ## !ETC
+depends() {
+    local pkg="${final_args[0]}"
+    [[ -z "$pkg" ]] && echo -e "$ALERT specify a package" && exit 1
+    step "Checking reverse dependencies for '$pkg'..."
+    
+    local deps_n
+    local deps
+    deps=$(pactree -r "$pkg" 2>/dev/null | tail -n +2)
+    deps_n=$(echo "$deps" | wc -l)
+    
+    if [[ -z "$deps" ]]; then
+        success "No dependencies found for $pkg."
+        logger "WHY" "$pkg -> No dependencies"
+        exit 0
+    fi
+    echo -e "\n $NOTE $deps_n dependencies found"
+    echo -e "${YELLOW} $CC '$pkg' is required by:${NC}"
+    echo "$deps" | sed 's/^/  /'
+    echo -e "\n${CYAN} $NOTE Suggested removal order:${NC}"
+    local pkgs
+    pkgs=$(echo "$deps" | grep -oP '[\w][\w.+@-]+' | awk '!seen[$0]++' | tr '\n' ' ')
+    echo "  jay -r $pkgs"
+    logger "WHY" "$pkg"
+}
+
 show_stats() {
     step "Gathering system statistics..."
     local native_pkgs=$(pacman -Qn | wc -l)
@@ -237,7 +281,6 @@ show_stats() {
     local install_date=$(head -n1 /var/log/pacman.log | cut -d' ' -f1 | tr -d '[]' | cut -d'T' -f1)
     local aur_cache_size="0"
     [[ -d "$REAL_HOME/.cache/$backend" ]] && aur_cache_size=$(du -sh "$REAL_HOME/.cache/$backend" | cut -f1)
-    local heavy_pkgs=$(expac -S "%m\t%n" 2>/dev/null | sort -hr | head -5 | awk '{print $2 " (" $1/1024/1024 "MB)"}')
     echo -e "\n${CYAN}--- JAY SYSTEM STATS ---${NC}"
     echo -e "${GREEN}Packages:${NC}"
     echo -e "  $CC Native: $native_pkgs"
@@ -248,8 +291,8 @@ show_stats() {
     echo -e "  $CC System Born on: $install_date"
     echo -e "  $CC $backend Cache: $aur_cache_size"
     if command -v expac &>/dev/null; then
-        echo -e "\n${RED}Heaviest Packages:${NC}"
-        echo "$heavy_pkgs" | sed "s/^/  $CC /"
+        echo -e "\n${RED}Top 10 Heaviest Packages:${NC}"
+        expac "%m %n" | sort -rn | head -10 | awk '{printf "  %s MB\t%s\n", $1/1024/1024, $2}'
     else
         echo -e "\n${YELLOW}$NOTE Install 'expac' to see heaviest packages.${NC}"
     fi
@@ -394,7 +437,7 @@ log_acts() {
                 cat "$LOG_FILE"
             fi
     esac
-    }
+}
 
 logger() {
     local status="${exit_code:-0}"
@@ -476,11 +519,13 @@ get_package_path() {
 [[ ! -w "$LOG_FILE" ]] && sudo chown "${SUDO_USER:-$USER}":"${SUDO_USER:-$USER}" "$LOG_FILE" 2>/dev/null
 [[ -z "$1" ]] && usage
 
+log_rotate
+
 raw_cmd="$*"; use_flatpak=false; ptbin=false; agressive_mode=false; final_args=(); yay_flags=(); log_lines=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        stats|--list-aur|--pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-r|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-sl|--fix-keys|clog|-cl|--check-updates)
+        stats|depends|--list-aur|--pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-r|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-sl|--fix-keys|clog|-cl|--check-updates)
             [[ -z "$action" ]] && action="$1" || final_args+=("$1")
         ;;
         --view)
@@ -556,6 +601,7 @@ case "$action" in
     cb|--create-backup) backup_action="create"; backup_func ;;
     rb|--restore-backup) backup_action="restore"; backup_func ;;
     la|--list-aur) list_aur ;;
+    dp|why|depends) depends ;;
     vi|--view) view_pkgbuild "${final_args[0]}"; exit 0 ;;
     *) err01 ;;
 esac
@@ -585,6 +631,8 @@ if [[ "$exit_code" -eq 0 && -n "$tag" ]]; then
     fi
 fi
 
-## Changelogs: 
-## Ver 5.3.1 -> 5.4
-## Rename almost every variable name for better system compatibility
+## Changelogs:
+## Ver 5.4 -> 5.5
+## Add dependencies manager
+## Add top 10 heaviest packages for --statistics / stats
+## Log file auto cleaner
