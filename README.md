@@ -25,7 +25,7 @@ JAY is a **powerful yet simple** wrapper designed to make AUR management intuiti
 Ensure you have the essentials installed before running JAY:
 
 ```bash
-sudo pacman -S --needed git base-devel yay
+sudo pacman -S --needed git base-devel
 ```
 # Installation
 Source
