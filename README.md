@@ -1,7 +1,7 @@
 [![Bash](https://img.shields.io/badge/Language-Bash-4EAA25?style=flat-square&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
 [![Arch Linux](https://img.shields.io/badge/OS-Arch_Linux-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://archlinux.org/)
 
-[![Jay-bin](https://img.shields.io/badge/JAY_BIN-v5.4-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-bin)
+[![Jay-bin](https://img.shields.io/badge/JAY_BIN-v5.5-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-bin)
 
 # JAY — Just Another Yogourt
  **A lightweight, human-friendly wrapper for `yay` with Flatpak integration.**
@@ -52,19 +52,21 @@ paru -S jay-bin
 The syntax is straightforward: jay [command] [options] [packages]
 Primary Commands
 Command	Alias	Description
-install	-i	Sync and install packages (AUR/Repo)
+install	-i:	Sync and install packages (AUR/Repo)
 
-remove	-rm	Remove packages from the system
+remove	-rm:	Remove packages from the system
 
-update	-u	Full system update (AUR + Flatpaks)
+update	-u:	Full system update (AUR + Flatpaks)
 
-search	-s	Search for packages in repositories
+search	-s:	Search for packages in repositories
 
-query	-q	Search for locally installed packages
+query	-q:	Search for locally installed packages
 
-orphan	-o	Remove all orphaned dependencies
+orphan	-o:	Remove all orphaned dependencies
 
-cache	-c	Clear Pacman and AUR cache
+cache	-c:	Clear Pacman and AUR cache
+
+why, depends: List dependencies of an package
 
 --ping: test if network is available
 
@@ -120,6 +122,6 @@ License
 
 Distributed under the MIT License. Created by xmlzitos154.
 
-Version 5.4
+Version 5.5
 
 Tip: If you like JAY, don't forget to leave a star to support the project!
