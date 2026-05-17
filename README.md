@@ -7,7 +7,7 @@
 
 **A lightweight, human-friendly wrapper for `yay` with Flatpak integration.**
 
-JAY is a **powerful yet simple** wrapper designed to make AUR management intuitive. No more memorizing cryptic flags like `-Syu` — just use plain English and let JAY handle the rest.
+JAY is a **powerful yet simple** wrapper designed to make AUR management intuitive. No more memorizing cryptic flags like `-Syu` — just use plain English and let JAY handle the rest
 
 ---
 
