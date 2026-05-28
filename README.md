@@ -1,3 +1,8 @@
+
+[![Bash](https://img.shields.io/badge/Language-Bash-4EAA25?style=flat-square&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
+[![Arch Linux](https://img.shields.io/badge/OS-Arch_Linux-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://archlinux.org/)
+[![Jay-bin](https://img.shields.io/badge/JAY_BIN-v6-1793D1?style=flat-square&logo=arch-linux&logoColor=white)](https://aur.archlinux.org/packages/jay-bin)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](https://opensource.org/licenses/MIT) 
 # JAY — Just Another Yogourt
 
 A lightweight, human-friendly wrapper for `yay` with Flatpak integration, multi-language support, and automated system safety.
