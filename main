@@ -2,7 +2,7 @@
 
 ## JAY - A Semantic AUR helper wrapper written in bash
 
-ver="7.0"; rc="1"
+ver="7.1"; rc="stable-1"
 
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
@@ -13,20 +13,6 @@ LOG_FILE="$REAL_HOME/.cache/jay.log"
 
 CYAN='\033[0;36m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'; BOLD='\033[1m'
 ALERT="[ ! ]"; ERROR="[ERROR]"; COMPLETE="[ OK ]"; NOTE="[ * ]"; CC="::"
-
-## !FUNCTIONS
-
-step() { echo -e "${BOLD}${GREEN}$CC ${1}${NC}"; }
-success() { echo -e "${GREEN} $COMPLETE ${NC}${1}"; }
-error() { echo -e "${RED} $ERROR ${NC}${1}"; exit 1; }
-
-err01() { echo -e "$ALERT invalid argument '$action'"; exit 1; }
-err02() { echo -e "${RED}$ERROR Cannot create temporary file"; exit 1; }
-err03() { echo -e "${RED}$ERROR the specified AUR Helper ($backend) not found"; exit 1; }
-err04() { echo -e "${RED}$ERROR Specified aur helper is not found or is not supported."; exit 1; }
-err05() { echo -e "${RED}$ERROR Don't use '$backend' with sudo."; exit 1; }
-err06() { echo -e "${RED}$ERROR Flatpak is not installed."; exit 1; }
-usage() { echo -e "Usage: jay [command] [options] [packages]"; exit 1; }
 
 ## !LANGUAGE SYSTEM
 
@@ -58,6 +44,43 @@ load_language() {
             MSG_SNAP_NOT_FOUND="Timeshift não encontrado. Pulando snapshot de segurança."
             MSG_SHOW_CMD="[EXEC] Executando comando real no sistema..."
             MSG_INSTALL_CONTRIB="Instalando"
+            HLP_USAGE="Uso"
+            HLP_OPTIONS="Opções"
+            HLP_HELP="Mostra esta mensagem de ajuda"
+            HLP_VERSION="Mostra a versão atual do programa"
+            HLP_INSTALL="Sincroniza/instala pacotes"
+            HLP_REMOVE="Remove pacotes (Use '-A' para ativar o modo Agressivo)"
+            HLP_UPDATE="Atualiza o sistema"
+            HLP_SEARCH="Busca pacotes no AUR"
+            HLP_QUERY="Consulta pacotes locais"
+            HLP_ORPHAN="Remove pacotes desnecessários (órfãos)"
+            HLP_CACHE="Limpa todo o cache do pacman"
+            HLP_MIRRORS="Busca por repositórios (mirrors) mais rápidos"
+            HLP_WHY="Lista as dependências reversas do pacote especificado"
+            HLP_SNAP="Cria um snapshot do estado atual do sistema (automático em updates)"
+            HLP_PIN="Ignora os pacotes especificados nas atualizações"
+            HLP_CHECK_UPD="Busca por atualizações disponíveis"
+            HLP_INFO="Mostra informações mais detalhadas sobre este programa"
+            HLP_FIX_KEYS="Restaura chaves GPG inválidas"
+            HLP_PACDIFF="Gerencia arquivos pacdiff (.pacnew/.pacsave)"
+            HLP_CREATE_BKp="Cria um arquivo de backup dos pacotes instalados"
+            HLP_RESTORE_BKp="Instala os pacotes listados no arquivo de backup"
+            HLP_PATH_BIN="Busca pelo caminho do binário (use em conjunto com query)"
+            HLP_PING="Testa se a rede está disponível"
+            HLP_LINES="Especifica o número de linhas para exibir no comando -sl/slog"
+            HLP_VIEW="Exibe o arquivo PKGBUILD de pacotes do AUR"
+            HLP_DRY="Mostra o que o comando faria em vez de realmente executá-lo"
+            HLP_STATS="Mostra estatísticas do sistema e dos pacotes"
+            HLP_FLAT_ONLY="Usa o Flatpak como backend exclusivo"
+            HLP_BACKEND="Alterna o AUR helper entre yay e paru a ser usado (Padrão: yay)"
+            MSG_ERR01="argumento inválido"
+            MSG_ERR02="Não foi possível criar o arquivo temporário"
+            MSG_ERR03="o AUR Helper especificado ($backend) não foi encontrado"
+            MSG_ERR04="O AUR Helper especificado não foi encontrado ou não é suportado."
+            MSG_ERR05="Não use '$backend' com sudo."
+            MSG_ERR06="O Flatpak não está instalado."
+            MSG_JAY_UPD_FOUND="${YELLOW}${BOLD}$NOTE Uma nova atualização para o JAY foi encontrada! Instale usando: jay -u${NC}"
+            MSG_AUR_HELPER_NOT_FOUND="$ERROR Nenhum AUR Helper encontrado"
         ;;
         es)
             MSG_USING_BACKEND="Usando"
@@ -83,6 +106,43 @@ load_language() {
             MSG_SNAP_NOT_FOUND="Timeshift no encontrado. Omitiendo snapshot de seguridad."
             MSG_SHOW_CMD="[EXEC] Ejecutando comando real en el sistema..."
             MSG_INSTALL_CONTRIB="Instalando"
+            HLP_USAGE="Uso"
+            HLP_OPTIONS="Opciones"
+            HLP_HELP="Muestra este mensaje de ayuda"
+            HLP_VERSION="Muestra la versión actual del programa"
+            HLP_INSTALL="Sincroniza/instala paquetes"
+            HLP_REMOVE="Elimina paquetes (Use '-A' para activar el modo Agresivo)"
+            HLP_UPDATE="Actualiza el sistema"
+            HLP_SEARCH="Busca paquetes en el AUR"
+            HLP_QUERY="Consulta paquetes locales"
+            HLP_ORPHAN="Elimina paquetes innecesarios (huérfanos)"
+            HLP_CACHE="Limpia toda la caché de pacman"
+            HLP_MIRRORS="Busca los repositorios (mirrors) más rápidos"
+            HLP_WHY="Lista las dependencias inversas del paquete especificado"
+            HLP_SNAP="Crea un snapshot del estado actual del sistema (automático en updates)"
+            HLP_PIN="Ignora los paquetes especificados en las actualizaciones"
+            HLP_CHECK_UPD="Busca actualizaciones disponibles"
+            HLP_INFO="Muestra información más detallada sobre este programa"
+            HLP_FIX_KEYS="Restaura claves GPG inválidas"
+            HLP_PACDIFF="Gestiona archivos pacdiff (.pacnew/.pacsave)"
+            HLP_CREATE_BKp="Crea un archivo de respaldo de los paquetes instalados"
+            HLP_RESTORE_BKp="Instala los paquetes listados en el archivo de respaldo"
+            HLP_PATH_BIN="Busca la ruta del binario (úselo junto con query)"
+            HLP_PING="Prueba si la red está disponible"
+            HLP_LINES="Especifica el número de líneas a mostrar en el comando -sl/slog"
+            HLP_VIEW="Muestra el archivo PKGBUILD de los paquetes de AUR"
+            HLP_DRY="Muestra lo que haría el comando en lugar de ejecutarlo realmente"
+            HLP_STATS="Muestra estadísticas del sistema y de los paquetes"
+            HLP_FLAT_ONLY="Utiliza Flatpak como backend exclusivo"
+            HLP_BACKEND="Cambia el AUR helper entre yay y paru a utilizar (Por defecto: yay)"
+            MSG_ERR01="argumento no válido"
+            MSG_ERR02="No se pudo crear el archivo temporal"
+            MSG_ERR03="no se encontró el AUR Helper especificado ($backend)"
+            MSG_ERR04="El AUR Helper especificado no se encontró o no es compatible."
+            MSG_ERR05="No use '$backend' con sudo."
+            MSG_ERR06="Flatpak no está instalado."
+            MSG_JAY_UPD_FOUND="${YELLOW}${BOLD}$NOTE ¡Se encontró una nueva actualización para JAY! Instálela usando: jay -u${NC}"
+            MSG_AUR_HELPER_NOT_FOUND="$ERROR No se encontró AUR Helpers disponibles"
         ;;
         *)
             MSG_USING_BACKEND="Using"
@@ -108,10 +168,62 @@ load_language() {
             MSG_SNAP_NOT_FOUND="Timeshift not found. Skipping safety snapshot."
             MSG_SHOW_CMD="[EXEC] Executing real command on the system..."
             MSG_INSTALL_CONTRIB="Installing"
+            HLP_USAGE="Usage"
+            HLP_OPTIONS="Options"
+            HLP_HELP="Show this message again"
+            HLP_VERSION="Show the actual program version"
+            HLP_INSTALL="Sync/install packages"
+            HLP_REMOVE="Remove packages (Use '-A' to activate the Agressive mode)"
+            HLP_UPDATE="Update the system"
+            HLP_SEARCH="Search packages in AUR"
+            HLP_QUERY="Query local packages"
+            HLP_ORPHAN="Remove non-necessary packages"
+            HLP_CACHE="Clear all pacman cache"
+            HLP_MIRRORS="Search for faster repos"
+            HLP_WHY="List dependencies of specified package"
+            HLP_SNAP="Create a snapshot of the actual system state (automatic for updates)"
+            HLP_PIN="Ignore specified packages in updates"
+            HLP_CHECK_UPD="Search for available updates"
+            HLP_INFO="Show more detailed informations of this program"
+            HLP_FIX_KEYS="Restore invalid GPG keys"
+            HLP_PACDIFF="Manage pacdiffs"
+            HLP_CREATE_BKp="Create a backup file"
+            HLP_RESTORE_BKp="Install packages listed on backup file"
+            HLP_PATH_BIN="Search for binary path (use with query)"
+            HLP_PING="Test if network is available"
+            HLP_LINES="Specify number of lines to display on -sl/slog command"
+            HLP_VIEW="View PKGBUILD file of AUR Packages"
+            HLP_DRY="Show what the command will do instead of actually execute them"
+            HLP_STATS="Show packages and system statistics"
+            HLP_FLAT_ONLY="Use flatpak as backend"
+            HLP_BACKEND="Switches the aur helper between yay and paru to be used (Default: yay)"
+            MSG_ERR01="invalid argument"
+            MSG_ERR02="Cannot create temporary file"
+            MSG_ERR03="the specified AUR Helper ($backend) not found"
+            MSG_ERR04="Specified aur helper is not found or is not supported."
+            MSG_ERR05="Don't use '$backend' with sudo."
+            MSG_ERR06="Flatpak is not installed."
+            MSG_JAY_UPD_FOUND="${YELLOW}${BOLD}$NOTE A new update for JAY was found! Install it using: jay -u${NC}"
+            MSG_AUR_HELPER_NOT_FOUND="$ERROR Not found availables AUR helpers"
         ;;
     esac
 }
+
 load_language
+
+## !FUNCTIONS
+
+step() { echo -e "${BOLD}${GREEN}$CC ${1}${NC}"; }
+success() { echo -e "${GREEN} $COMPLETE ${NC}${1}"; }
+error() { echo -e "${RED} $ERROR ${NC}${1}"; exit 1; }
+
+err01() { echo -e "$ALERT $MSG_ERR01 '$action'"; exit 1; }
+err02() { echo -e "${RED}$ERROR $MSG_ERR02"; exit 1; }
+err03() { echo -e "${RED}$ERROR $MSG_ERR03"; exit 1; }
+err04() { echo -e "${RED}$ERROR $MSG_ERR04"; exit 1; }
+err05() { echo -e "${RED}$ERROR $MSG_ERR05"; exit 1; }
+err06() { echo -e "${RED}$ERROR $MSG_ERR06"; exit 1; }
+usage() { echo -e "$HLP_USAGE: jay [command] [options] [packages]"; exit 1; }
 
 if command -v yay &>/dev/null; then
     echo -e "${GREEN}${BOLD}$CC $MSG_USING_BACKEND yay...${NC}"
@@ -123,11 +235,23 @@ if command -v yay &>/dev/null; then
     echo -e " ${CYAN}${BOLD}$NOTE pikaur $MSG_DETECTED pikaur...${NC}"
     backend="pikaur"
 else
-    echo -e "${YELLOW} $ALERT $MSG_NO_HELPER${NC}"; backend="pacman"
-    [[ ! "$EUID" == "0" ]] && error "$MSG_PACMAN_SUDO"
+    echo -e "${RED}$MSG_AUR_HELPER_NOT_FOUND"; exit 1
 fi
 
+load_language
+
 [[ "$backend" != "pacman" && "$EUID" -eq 0 ]] && err05
+
+## !JAY UPDATE CHECKER
+
+get_upd() {
+    local check_cmd="$backend"
+    [[ "$aur_helper" != "none" ]] && check_cmd="$aur_helper"
+    if $check_cmd -Qua 2>/dev/null | grep -qi "jay-bin"; then
+        echo -e "$MSG_JAY_UPD_FOUND"
+    fi
+}
+get_upd
 
 log_rotate() {
     local max_size=512000
@@ -147,15 +271,18 @@ log_rotate() {
     fi
 }
 
-display_ver() { echo -e "\njay $ver - rc-$rc\n"; }
+display_ver() { echo -e "\njay $ver\n"; }
 inform() {
+    local version_padded
+    printf -v version_padded "v%-6s" "$ver"
+    
     echo -e "${BOLD}${CYAN}        __            "
     echo -e "${BOLD}${CYAN}       / /___ ___  __ "
     echo -e "${BOLD}${CYAN}  __  / / __  / / / / "
     echo -e "${BOLD}${CYAN} / /_/ / /_/ / /_/ /  "
     echo -e "${BOLD}${CYAN} \____/\__,_/\__, /   "
-    echo -e "${BOLD}${CYAN}  v$ver      /____/    "
-    echo -e "\n ${YELLOW}release: ${CYAN}pre-release\n ${YELLOW}codename: ${CYAN}'Catupiry'\n ${YELLOW}Made by: ${CYAN}xmlzitos154\n${GREEN} Thanks for using JAY!\n ${NC}"
+    echo -e "${BOLD}${CYAN}  ${version_padded}   /____/    "
+    echo -e "\n ${YELLOW}release: ${CYAN}$rc\n ${YELLOW}codename: ${CYAN}'Catupiry'\n ${YELLOW}Made by: ${CYAN}xmlzitos154\n${GREEN} Thanks for using JAY!\n ${NC}"
     exit 0
 }
 
@@ -221,12 +348,10 @@ run_flatpak() {
             [[ -n "$flat_cmd" ]] && step "Searching in Flatpak..." && flatpak "$flat_cmd" "${final_args[@]}"
         ;;
         *)
-            if [[ $exit_code -ne 0 ]] || grep -qiE "target not found|Nenhum pacote|não encontrado" "$tmp_out"; then
-                echo -e "\n${YELLOW} $NOTE Package not found in AUR. Trying on Flatpak...${NC}\n"
-                flatpak "$flat_cmd" -y "${final_args[@]}"
-                exit_code=$?
-                [[ $exit_code -eq 0 ]] && tag="FLATPAK"
-            fi
+            step "$MSG_USING_FLATPAK"
+            flatpak "$flat_cmd" -y "${final_args[@]}"
+            exit_code=$?
+            [[ $exit_code -eq 0 ]] && tag="FLATPAK"
         ;;
     esac
 }
@@ -247,8 +372,8 @@ tester() {
         printf "\r${CYAN} [%c] Aguardando resposta...\033[K${NC}" "${spin:$i:1}"
         sleep 0.1
     done
-       printf "\r\033[K"
-
+    printf "\r\033[K"
+    
     if wait $pid; then
         success "$MSG_NET_OK"
     else
@@ -260,40 +385,40 @@ tester() {
 ## !BASE
 help_message() {
     display_ver
-    echo -e "Usage: jay [command] [options] [packages]"
-    echo -e "Usage: jay [-i | -r | -s | -u | check] [-f | --flatpak] [--noconfirm]"
-    echo -e "Usage: jay [-q | query] [--list-aur] [--path-to-binary]"
-    echo -e "Usage: jay [--restore-backup] [--path /path/to/backup/file.txt]"
-    echo -e "Usage: jay [--backend] [yay | paru]"
-    echo -e "Usage: jay [slog|-sl] [--lines X]"
-    echo -e "\nOptions:\n"
-    echo -e "-h, --help               Show this message again"
-    echo -e "-v, --version            Show the actual program version"
-    echo -e "-i, install              Sync/install packages"
-    echo -e "-r, remove               Remove packages (Use '-A' to activate the Agressive mode)"
-    echo -e "-u, update               Update the system"
-    echo -e "-s, search               search packages in AUR"
-    echo -e "-q, query                Query local packages"
-    echo -e "-o, orphan               Remove non-necessary packages"
-    echo -e "-c, cache                Clear all pacman cache"
-    echo -e "-m, mirrors              Search for faster repos"
-    echo -e "dp, why                  List dependencies of specified package"
-    echo -e "snap, --create-snapshot  Create a snapshot of the actual system state (automatic for updates)"
-    echo -e "pin, --ignore            Ignore specified packages in updates"
-    echo -e "--check-updates          Search for available updates"
-    echo -e "--info                   Show more detailed informations of this program"
-    echo -e "--fix-keys               Restore invalid GPG keys"
-    echo -e "--pacdiff                Manage pacdiffs"
-    echo -e "--create-backup          Create an backup file"
-    echo -e "--restore-backup         Install packages listed on backup file"
-    echo -e "--path-to-binary         Search for binary path (use with query)"
-    echo -e "--ping                   Test if network is available"
-    echo -e "--lines                  Specify number of lines to display on -sl/slog command"
-    echo -e "--view                   View PKGBUILD file of AUR Packages"
-    echo -e "--dry-run                Show what the command will do instead of actually execute them"
-    echo -e "--statistics, stats      Show packages and system statistics"
-    echo -e "--flatpak-only           Use flatpak as backend"
-    echo -e "--backend                Switches the aur helper between yay and paru to be used (Default: yay)\n"
+    echo -e "$HLP_USAGE: jay [command] [options] [packages]"
+    echo -e "$HLP_USAGE: jay [-i | -r | -s | -u | check] [-f | --flatpak] [--noconfirm]"
+    echo -e "$HLP_USAGE: jay [-q | query] [--list-aur] [--path-to-binary]"
+    echo -e "$HLP_USAGE: jay [--restore-backup] [--path /path/to/backup/file.txt]"
+    echo -e "$HLP_USAGE: jay [--backend] [yay | paru]"
+    echo -e "$HLP_USAGE: jay [slog|-sl] [--lines X]"
+    echo -e "\n$HLP_OPTIONS:\n"
+    echo -e "-h, --help               $HLP_HELP"
+    echo -e "-v, --version            $HLP_VERSION"
+    echo -e "-i, install              $HLP_INSTALL"
+    echo -e "-r, remove               $HLP_REMOVE"
+    echo -e "-u, update               $HLP_UPDATE"
+    echo -e "-s, search               $HLP_SEARCH"
+    echo -e "-q, query                $HLP_QUERY"
+    echo -e "-o, orphan               $HLP_ORPHAN"
+    echo -e "-c, cache                $HLP_CACHE"
+    echo -e "-m, mirrors              $HLP_MIRRORS"
+    echo -e "dp, why                  $HLP_WHY"
+    echo -e "snap, --create-snapshot  $HLP_SNAP"
+    echo -e "pin, --ignore            $HLP_PIN"
+    echo -e "--check-updates          $HLP_CHECK_UPD"
+    echo -e "--info                   $HLP_INFO"
+    echo -e "--fix-keys               $HLP_FIX_KEYS"
+    echo -e "--pacdiff                $HLP_PACDIFF"
+    echo -e "--create-backup          $HLP_CREATE_BKp"
+    echo -e "--restore-backup         $HLP_RESTORE_BKp"
+    echo -e "--path-to-binary         $HLP_PATH_BIN"
+    echo -e "--ping                   $HLP_PING"
+    echo -e "--lines                  $HLP_LINES"
+    echo -e "--view                   $HLP_VIEW"
+    echo -e "--dry-run                $HLP_DRY"
+    echo -e "--statistics, stats      $HLP_STATS"
+    echo -e "--flatpak-only           $HLP_FLAT_ONLY"
+    echo -e "--backend                $HLP_BACKEND\n"
     exit 0
 }
 
@@ -418,7 +543,7 @@ pin() {
     fi
 }
 depends() {
-    ! command -v pactree &>/dev/null && { step "$MSG_INSTALLING_CONTRIB pacman-contrib..."; "$backend" -S pacman-contrib --noconfirm; }
+    ! command -v pactree &>/dev/null && { step "$MSG_INSTALL_CONTRIB pacman-contrib..."; "$backend" -S pacman-contrib --noconfirm; }
     local pkg="${final_args[0]}"
     [[ -z "$pkg" ]] && echo -e "$ALERT specify a package" && exit 1
     ! pacman -Qi "$pkg" &>/dev/null && echo -e "$ERROR ${YELLOW}Package not found: '$pkg'" && exit 1
@@ -497,7 +622,7 @@ list_aur() {
 }
 
 detect_country() {
-    curl -s --max-time 2 https://ipinfo.io/country 2>/dev/null
+    mirror_country="$(curl -s --max-time 2 https://ipinfo.io/country 2>/dev/null)"
 }
 
 refresh_mirrors() {
@@ -505,14 +630,14 @@ refresh_mirrors() {
     if ! command -v reflector &>/dev/null; then
         echo -e "${YELLOW}$NOTE Reflector not found.${NC}"
         read -p "Do you want to install reflector to optimize mirrors? [Y/n] " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
+        if [[ "$REPLY" =~ ^[Yy]$ || -z "$REPLY" ]]; then
             sudo pacman -S reflector --noconfirm
         else
             error "Reflector is required for this function."
         fi
     fi
     
+    detect_country
     reflector_args=(--latest 20 --protocol https --sort rate)
     if [[ -n "$mirror_country" ]]; then
         step "Using mirrors from: $mirror_country"
@@ -604,6 +729,12 @@ sl() {
     fi
 }
 
+cl() {
+    [[ ! -s "$LOG_FILE" ]] && echo "$NOTE The log file is empty." && exit 0
+    echo "" > "$LOG_FILE"
+    success "Done."
+}
+
 logger() {
     local status="${exit_code:-0}"
     local tag="$1"
@@ -689,7 +820,7 @@ log_rotate
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --create-snapshot|dp|why|--ignore|pin|stats|--list-aur|--pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-r|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-sl|--fix-keys|--check-updates)
+        --create-snapshot|dp|why|--ignore|pin|stats|--list-aur|--pacdiff|--ping|--create-backup|--restore-backup|install|-i|remove|-r|update|-u|search|-s|query|-q|cache|-c|orphan|-o|mirrors|-m|slog|-cl|-sl|--fix-keys|--check-updates)
             [[ -z "$action" ]] && action="$1" || final_args+=("$1")
         ;;
         --view)
@@ -750,6 +881,7 @@ fi
 
 case "$action" in
     show-logs|slog|-sl) sl ;;
+    clear-logs|clog|-cl) cl ;;
     --ping) tester && logger "TEST FOR NETWORK" "available" && exit 0 ;;
     snap|--create-snapshot) create_snapshot ;;
     i|in|ins|install|-i) ins ;;
