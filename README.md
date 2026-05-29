@@ -54,7 +54,7 @@ sudo pacman -S --needed git base-devel
 ### From source
 
 ```bash
-git clone [https://github.com/xmlzitos154/jay.git](https://github.com/xmlzitos154/jay.git)
+git clone https://github.com/xmlzitos154/jay.git
 cd jay
 chmod +x install.sh
 sudo ./install.sh
