@@ -1,6 +1,3 @@
-Aqui tens o conteúdo completo do **README.md** estruturado exatamente em formato Markdown para que possas copiar e colar diretamente no teu repositório:
-
-```markdown
 # JAY — Just Another Yogourt
 
 A lightweight, human-friendly wrapper for `yay` with Flatpak integration, multi-language support, and automated system safety.
@@ -188,7 +185,3 @@ jay --restore-backup --path ~/safe_state.txt # handles targets outside default e
 ## License
 
 Distributed under the MIT License. Developed with love by xmlzitos154.
-
-```
-
-```
