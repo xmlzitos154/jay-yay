@@ -2,7 +2,7 @@
 
 ## JAY - A Semantic AUR helper wrapper written in bash
 
-ver="7.1"; rc="stable-1"
+ver="7.1.1"; rc="stable-1"
 
 set -o pipefail
 REAL_HOME=$(getent passwd "${SUDO_USER:-$USER}" 2>/dev/null | cut -d: -f6); REAL_HOME=${REAL_HOME:-$HOME}
@@ -21,6 +21,78 @@ load_language() {
     
     case "$lang_code" in
         pt)
+            MSG_ORPHANS_SEARCHING="Procurando por pacotes órfãos..."
+            MSG_ORPHANS_NONE="Nenhum pacote órfão encontrado."
+            MSG_ORPHANS_FOUND="órfãos encontrados"
+            MSG_ORPHANS_REMOVING="Removendo pacotes órfãos..."
+            MSG_CACHE_CLEANING_BUILDS="Limpando compilações do"
+            MSG_CACHE_BUILDS_CLEANED="Compilações limpas."
+            MSG_CACHE_CLEANING_FLATPAK="Limpando Flatpaks não utilizados..."
+            MSG_CACHE_FLATPAK_CLEANED="Flatpaks limpos."
+            MSG_CACHE_CLEANING_PACMAN="Limpando o cache do pacman..."
+            MSG_CONF_SEARCHING="Procurando por arquivos .pacnew/.pacsave..."
+            MSG_CONF_NONE="Tudo limpo! Nenhum conflito encontrado em /etc."
+            MSG_CONF_PENDING="Arquivos pendentes encontrados:"
+            MSG_CONF_MERGE_PROMPT="Mesclar agora com o pacdiff? [S/n]"
+            MSG_FLAT_UPDATING="Atualizando Flatpaks..."
+            MSG_FLAT_SEARCHING="Procurando no Flatpak..."
+            MSG_DEPS_SPECIFY="especifique um pacote"
+            MSG_DEPS_NOT_FOUND="Pacote não encontrado:"
+            MSG_DEPS_CHECKING="Verificando dependências reversas para"
+            MSG_DEPS_NONE="Nenhuma dependência encontrada para"
+            MSG_DEPS_FOUND_COUNT="dependências encontradas"
+            MSG_DEPS_REQUIRED_BY="é necessário por:"
+            MSG_DEPS_SUGGESTED_ORDER="Ordem de remoção sugerida:"
+            MSG_STATS_GATHERING="Coletando estatísticas do sistema..."
+            MSG_STATS_TITLE="--- ESTATÍSTICAS DO SISTEMA JAY ---"
+            MSG_STATS_PACKAGES="Pacotes:"
+            MSG_STATS_NATIVE="Nativo:"
+            MSG_STATS_DISK_USAGE="Uso do Disco (Cache):"
+            MSG_STATS_PACMAN_DB="Base de dados do Pacman:"
+            MSG_STATS_BORN_ON="Sistema instalado em:"
+            MSG_STATS_HEAVIEST="Os 10 Pacotes Mais Pesados:"
+            MSG_STATS_EXPAC_WARN="Instale o 'expac' para ver os pacotes mais pesados."
+            MSG_PKGB_SPECIFY="Especifique um pacote."
+            MSG_PKGB_SEARCHING="Procurando PKGBUILD para"
+            MSG_PKGB_NOT_FOUND="Não foi possível encontrar o PKGBUILD de"
+            MSG_PKGB_AUR_QUESTION="Ele está no AUR?"
+            MSG_AUR_FILTERING="Filtrando pacotes instalados via AUR..."
+            MSG_AUR_TOTAL_FOUND="No total, foram encontrados"
+            MSG_AUR_PKGS_FOUND="pacotes do AUR."
+            MSG_RELEASE="lançamento:"
+            MSG_CODENAME="codinome:"
+            MSG_MADE_BY="Feito por:"
+            MSG_THANKS="Obrigado por usar o JAY!"
+            MSG_MIRROR_START="Iniciando otimização de espelhos (Reflector)..."
+            MSG_REFLECTOR_NOT_FOUND="Reflector não foi encontrado."
+            MSG_INSTALL_REFLECTOR_PROMPT="Deseja instalar o reflector para otimizar os espelhos? [S/n] "
+            MSG_REFLECTOR_REQUIRED="O Reflector é obrigatório para esta função."
+            MSG_USING_MIRRORS_FROM="Usando espelhos de:"
+            MSG_NO_COUNTRY_WORLDWIDE="Não foi possível detectar o país, usando espelhos mundiais"
+            MSG_MIRROR_BACKUP="Criando backup em /etc/pacman.d/mirrorlist.bak"
+            MSG_FETCHING_MIRRORS="Buscando os espelhos mais rápidos... (Por favor, aguarde)"
+            MSG_MIRRORS_SUCCESS="Espelhos atualizados e salvos com sucesso."
+            MSG_MIRRORS_FAILED="Falha ao atualizar os espelhos. Verifique sua conexão com a internet."
+            MSG_GPG_START="Iniciando recuperação de chaves GPG..."
+            MSG_IMPORTING_KEY="Importando chave:"
+            MSG_CLEANING_KEY_CACHE="Limpando caches de chaves corrompidos..."
+            MSG_DONE="Pronto."
+            ASK_ROTATE="Arquivar e trocar"
+            ASK_1="S"
+            ASK_2="n"
+            USG1="Comando"
+            USG2="Opções"
+            USG3="Pacotes"
+            MSG_INSTALL_DEPS="Instalando dependências..."
+            MSG_SEARCHING_UPDATES="Buscando por atualizações..."
+            MSG_UPDATES_FOUND="Atualizações encontradas"
+            MSG_IN_AUR="no AUR"
+            MSG_AND="e"
+            MSG_IN_FLATPAK="no Flatpak"
+            MSG_OFFICIAL_UPDATES="Atualizações oficiais:"
+            MSG_AUR_UPDATES="Atualizações no AUR:"
+            MSG_FLATPAK_UPDATES="Atualizações no Flatpak:"
+            MSG_SYSTEM_UPDATE="Seu sistema está atualizado."
             MSG_USING_BACKEND="Usando"
             MSG_DETECTED="detectado, usando"
             MSG_NO_HELPER="Nenhum AUR Helper encontrado. Usando pacman no lugar (limitado)"
@@ -44,6 +116,7 @@ load_language() {
             MSG_SNAP_NOT_FOUND="Timeshift não encontrado. Pulando snapshot de segurança."
             MSG_SHOW_CMD="[EXEC] Executando comando real no sistema..."
             MSG_INSTALL_CONTRIB="Instalando"
+            MSG_ROTATED="trocado e Salvo como"
             HLP_USAGE="Uso"
             HLP_OPTIONS="Opções"
             HLP_HELP="Mostra esta mensagem de ajuda"
@@ -79,10 +152,87 @@ load_language() {
             MSG_ERR04="O AUR Helper especificado não foi encontrado ou não é suportado."
             MSG_ERR05="Não use '$backend' com sudo."
             MSG_ERR06="O Flatpak não está instalado."
+            MSG_ERR07="Pacman precisa de sudo para continuar."
             MSG_JAY_UPD_FOUND="${YELLOW}${BOLD}$NOTE Uma nova atualização para o JAY foi encontrada! Instale usando: jay -u${NC}"
             MSG_AUR_HELPER_NOT_FOUND="$ERROR Nenhum AUR Helper encontrado"
+            MSG_LARGE_LOG_FILE="O Arquivo de log está ficando grande."
+            MSG_AUR_HELPER_NOT_FOUND="Nenhum aur helper encontrado, usando pacman (limitado)."
+            MSG_EMPTY_LOG="O Arquivo de log está vazio."
+            MSG_WAITING="Aguardando resposta"
         ;;
         es)
+            MSG_ORPHANS_SEARCHING="Procurando por pacotes órfãos..."
+            MSG_ORPHANS_NONE="Nenhum pacote órfão encontrado."
+            MSG_ORPHANS_FOUND="órfãos encontrados"
+            MSG_ORPHANS_REMOVING="Removendo pacotes órfãos..."
+            MSG_CACHE_CLEANING_BUILDS="Limpando compilações do"
+            MSG_CACHE_BUILDS_CLEANED="Compilações limpas."
+            MSG_CACHE_CLEANING_FLATPAK="Limpando Flatpaks não utilizados..."
+            MSG_CACHE_FLATPAK_CLEANED="Flatpaks limpos."
+            MSG_CACHE_CLEANING_PACMAN="Limpando o cache do pacman..."
+            MSG_CONF_SEARCHING="Procurando por arquivos .pacnew/.pacsave..."
+            MSG_CONF_NONE="Tudo limpo! Nenhum conflito encontrado em /etc."
+            MSG_CONF_PENDING="Arquivos pendentes encontrados:"
+            MSG_CONF_MERGE_PROMPT="Mesclar agora com o pacdiff? [S/n]"
+            MSG_FLAT_UPDATING="Atualizando Flatpaks..."
+            MSG_FLAT_SEARCHING="Procurando no Flatpak..."
+            MSG_DEPS_SPECIFY="especifique um pacote"
+            MSG_DEPS_NOT_FOUND="Pacote não encontrado:"
+            MSG_DEPS_CHECKING="Verificando dependências reversas para"
+            MSG_DEPS_NONE="Nenhuma dependência encontrada para"
+            MSG_DEPS_FOUND_COUNT="dependências encontradas"
+            MSG_DEPS_REQUIRED_BY="é necessário por:"
+            MSG_DEPS_SUGGESTED_ORDER="Ordem de remoção sugerida:"
+            MSG_STATS_GATHERING="Coletando estatísticas do sistema..."
+            MSG_STATS_TITLE="--- ESTATÍSTICAS DO SISTEMA JAY ---"
+            MSG_STATS_PACKAGES="Pacotes:"
+            MSG_STATS_NATIVE="Nativo:"
+            MSG_STATS_DISK_USAGE="Uso do Disco (Cache):"
+            MSG_STATS_PACMAN_DB="Base de dados do Pacman:"
+            MSG_STATS_BORN_ON="Sistema instalado em:"
+            MSG_STATS_HEAVIEST="Os 10 Pacotes Mais Pesados:"
+            MSG_STATS_EXPAC_WARN="Instale o 'expac' para ver os pacotes mais pesados."
+            MSG_PKGB_SPECIFY="Especifique um pacote."
+            MSG_PKGB_SEARCHING="Procurando PKGBUILD para"
+            MSG_PKGB_NOT_FOUND="Não foi possível encontrar o PKGBUILD de"
+            MSG_PKGB_AUR_QUESTION="Ele está no AUR?"
+            MSG_AUR_FILTERING="Filtrando pacotes instalados via AUR..."
+            MSG_AUR_TOTAL_FOUND="No total, foram encontrados"
+            MSG_AUR_PKGS_FOUND="pacotes do AUR."
+            MSG_RELEASE="lanzamiento:"
+            MSG_CODENAME="nombre en clave:"
+            MSG_MADE_BY="Hecho por:"
+            MSG_THANKS="¡Gracias por usar JAY!"
+            MSG_MIRROR_START="Iniciando optimización de espejos (Reflector)..."
+            MSG_REFLECTOR_NOT_FOUND="Reflector no fue encontrado."
+            MSG_INSTALL_REFLECTOR_PROMPT="¿Desea instalar reflector para optimizar los espejos? [S/n] "
+            MSG_REFLECTOR_REQUIRED="Reflector es obligatorio para esta función."
+            MSG_USING_MIRRORS_FROM="Usando espejos de:"
+            MSG_NO_COUNTRY_WORLDWIDE="No se pudo detectar el país, usando espejos mundiales"
+            MSG_MIRROR_BACKUP="Creando copia de seguridad en /etc/pacman.d/mirrorlist.bak"
+            MSG_FETCHING_MIRRORS="Buscando los espejos más rápidos... (Por favor, espere)"
+            MSG_MIRRORS_SUCCESS="Espejos actualizados y guardados con éxito."
+            MSG_MIRRORS_FAILED="Error al actualizar los espejos. Verifique su conexión a internet."
+            MSG_GPG_START="Iniciando recuperación de llaves GPG..."
+            MSG_IMPORTING_KEY="Importando llave:"
+            MSG_CLEANING_KEY_CACHE="Limpiando cachés de llaves corruptos..."
+            MSG_DONE="Listo."
+            ASK_ROTATE="Archivar y rotar"
+            ASK_1="S"
+            ASK_2="n"
+            USG1="Comando"
+            USG2="Opciones"
+            USG3="Paquetes"
+            MSG_INSTALL_DEPS="Instalando dependencias..."
+            MSG_SEARCHING_UPDATES="Buscando atualizaciones..."
+            MSG_UPDATES_FOUND="Actualizaciones encontradas"
+            MSG_IN_AUR="en AUR"
+            MSG_AND="y"
+            MSG_IN_FLATPAK="en Flatpak"
+            MSG_OFFICIAL_UPDATES="Actualizaciones oficiales:"
+            MSG_AUR_UPDATES="Actualizaciones en AUR:"
+            MSG_FLATPAK_UPDATES="Actualizaciones en Flatpak:"
+            MSG_SYSTEM_UPDATE="Su sistema está actualizado."
             MSG_USING_BACKEND="Usando"
             MSG_DETECTED="detectado, usando"
             MSG_NO_HELPER="No se encontraron AUR Helpers. Usando pacman en su lugar (limitado)"
@@ -106,6 +256,7 @@ load_language() {
             MSG_SNAP_NOT_FOUND="Timeshift no encontrado. Omitiendo snapshot de seguridad."
             MSG_SHOW_CMD="[EXEC] Ejecutando comando real en el sistema..."
             MSG_INSTALL_CONTRIB="Instalando"
+            MSG_ROTATED="girado y guardado como"
             HLP_USAGE="Uso"
             HLP_OPTIONS="Opciones"
             HLP_HELP="Muestra este mensaje de ayuda"
@@ -141,10 +292,87 @@ load_language() {
             MSG_ERR04="El AUR Helper especificado no se encontró o no es compatible."
             MSG_ERR05="No use '$backend' con sudo."
             MSG_ERR06="Flatpak no está instalado."
+            MSG_ERR07="Pacman necesita sudo para continuar."
             MSG_JAY_UPD_FOUND="${YELLOW}${BOLD}$NOTE ¡Se encontró una nueva actualización para JAY! Instálela usando: jay -u${NC}"
             MSG_AUR_HELPER_NOT_FOUND="$ERROR No se encontró AUR Helpers disponibles"
+            MSG_LARGE_LOG_FILE="El archivo de registro está creciendo demasiado."
+            MSG_AUR_HELPER_NOT_FOUND="No se encontró ningún asistente de AUR, se está utilizando Pacman (limitado)."
+            MSG_EMPTY_LOG="El archivo de registro está vacío."
+            MSG_WAITING="Esperando respuesta"
         ;;
         *)
+            MSG_ORPHANS_SEARCHING="Searching for orphan packages..."
+            MSG_ORPHANS_NONE="No orphan packages found"
+            MSG_ORPHANS_FOUND="Orphans found"
+            MSG_ORPHANS_REMOVING="Removing orphans..."
+            MSG_CACHE_CLEANING_BUILDS="Cleaning $backend builds..."
+            MSG_CACHE_BUILDS_CLEANED="Builds cleaned."
+            MSG_CACHE_CLEANING_FLATPAK="Cleaning unused Flatpaks..."
+            MSG_CACHE_FLATPAK_CLEANED="Flatpaks cleaned."
+            MSG_CACHE_CLEANING_PACMAN="Cleaning pacman cache..."
+            MSG_CONF_SEARCHING="Searching for .pacnew/.pacsave files..."
+            MSG_CONF_NONE="All clear! No conflicts found in /etc."
+            MSG_CONF_PENDING="Pending files found:"
+            MSG_CONF_MERGE_PROMPT="Merge now with pacdiff? [y/N]"
+            MSG_FLAT_UPDATING="Updating Flatpaks..."
+            MSG_FLAT_SEARCHING="Searching in Flatpak..."
+            MSG_DEPS_SPECIFY="specify a package"
+            MSG_DEPS_NOT_FOUND="Package not found:"
+            MSG_DEPS_CHECKING="Checking reverse dependencies for"
+            MSG_DEPS_NONE="No dependencies found for"
+            MSG_DEPS_FOUND_COUNT="dependencies found"
+            MSG_DEPS_REQUIRED_BY="is required by:"
+            MSG_DEPS_SUGGESTED_ORDER="Suggested removal order:"
+            MSG_STATS_GATHERING="Gathering system statistics..."
+            MSG_STATS_TITLE="--- JAY SYSTEM STATS ---"
+            MSG_STATS_PACKAGES="Packages:"
+            MSG_STATS_NATIVE="Native:"
+            MSG_STATS_DISK_USAGE="Disk Usage (Cache):"
+            MSG_STATS_PACMAN_DB="Pacman DB:"
+            MSG_STATS_BORN_ON="System Born on:"
+            MSG_STATS_HEAVIEST="Top 10 Heaviest Packages:"
+            MSG_STATS_EXPAC_WARN="Install 'expac' to see heaviest packages."
+            MSG_PKGB_SPECIFY="Specify one package."
+            MSG_PKGB_SEARCHING="Searching PKGBUILD for"
+            MSG_PKGB_NOT_FOUND="Can't find PKGBUILD for"
+            MSG_PKGB_AUR_QUESTION="Is it in the AUR?"
+            MSG_AUR_FILTERING="Filtering packages installed via AUR..."
+            MSG_AUR_TOTAL_FOUND="Total of"
+            MSG_AUR_PKGS_FOUND="AUR packages found."
+            MSG_RELEASE="release:"
+            MSG_CODENAME="codename:"
+            MSG_MADE_BY="Made by:"
+            MSG_THANKS="Thanks for using JAY!"
+            MSG_MIRROR_START="Starting mirror optimization (Reflector)..."
+            MSG_REFLECTOR_NOT_FOUND="Reflector not found."
+            MSG_INSTALL_REFLECTOR_PROMPT="Do you want to install reflector to optimize mirrors? [Y/n] "
+            MSG_REFLECTOR_REQUIRED="Reflector is required for this function."
+            MSG_USING_MIRRORS_FROM="Using mirrors from:"
+            MSG_NO_COUNTRY_WORLDWIDE="Could not detect country, using worldwide mirrors"
+            MSG_MIRROR_BACKUP="Creating backup at /etc/pacman.d/mirrorlist.bak"
+            MSG_FETCHING_MIRRORS="Fetching the fastest mirrors... (Please wait)"
+            MSG_MIRRORS_SUCCESS="Mirrors updated and saved successfully."
+            MSG_MIRRORS_FAILED="Failed to update mirrors. Check your internet connection."
+            MSG_GPG_START="Starting GPG key recovery..."
+            MSG_IMPORTING_KEY="Importing key:"
+            MSG_CLEANING_KEY_CACHE="Cleaning corrupted key caches..."
+            MSG_DONE="Done."
+            ASK_ROTATE="Archive and rotate"
+            ASK_1="Y"
+            ASK_2="n"
+            USG1="Command"
+            USG2="Options"
+            USG3="Packages"
+            MSG_INSTALL_DEPS="Installing dependencies..."
+            MSG_SEARCHING_UPDATES="Searching for updates..."
+            MSG_UPDATES_FOUND="Updates found"
+            MSG_IN_AUR="in AUR"
+            MSG_AND="and"
+            MSG_IN_FLATPAK="in Flatpak"
+            MSG_OFFICIAL_UPDATES="Official updates:"
+            MSG_AUR_UPDATES="Updates in AUR:"
+            MSG_FLATPAK_UPDATES="Updates in Flatpak:"
+            MSG_SYSTEM_UPDATE="Your system is updated."
             MSG_USING_BACKEND="Using"
             MSG_DETECTED="detected, using"
             MSG_NO_HELPER="No AUR Helpers found. Using pacman instead (limited)"
@@ -168,6 +396,7 @@ load_language() {
             MSG_SNAP_NOT_FOUND="Timeshift not found. Skipping safety snapshot."
             MSG_SHOW_CMD="[EXEC] Executing real command on the system..."
             MSG_INSTALL_CONTRIB="Installing"
+            MSG_ROTATED="Rotated and saved as"
             HLP_USAGE="Usage"
             HLP_OPTIONS="Options"
             HLP_HELP="Show this message again"
@@ -203,8 +432,13 @@ load_language() {
             MSG_ERR04="Specified aur helper is not found or is not supported."
             MSG_ERR05="Don't use '$backend' with sudo."
             MSG_ERR06="Flatpak is not installed."
+            MSG_ERR07="Pacman needs sudo to continue."
             MSG_JAY_UPD_FOUND="${YELLOW}${BOLD}$NOTE A new update for JAY was found! Install it using: jay -u${NC}"
             MSG_AUR_HELPER_NOT_FOUND="$ERROR Not found availables AUR helpers"
+            MSG_LARGE_LOG_FILE="The log file is getting larger."
+            MSG_AUR_HELPER_NOT_FOUND="No AUR Helpers found, using pacman (limited)."
+            MSG_EMPTY_LOG="The log file is empty."
+            MSG_WAITING="Waiting for response"
         ;;
     esac
 }
@@ -223,7 +457,8 @@ err03() { echo -e "${RED}$ERROR $MSG_ERR03"; exit 1; }
 err04() { echo -e "${RED}$ERROR $MSG_ERR04"; exit 1; }
 err05() { echo -e "${RED}$ERROR $MSG_ERR05"; exit 1; }
 err06() { echo -e "${RED}$ERROR $MSG_ERR06"; exit 1; }
-usage() { echo -e "$HLP_USAGE: jay [command] [options] [packages]"; exit 1; }
+err07() { echo -e "${RED}$ERROR $MSG_ERR07"; exit 1; }
+usage() { echo -e "$HLP_USAGE: jay [$USG1] [$USG2] [$USG3]"; exit 1; }
 
 if command -v yay &>/dev/null; then
     echo -e "${GREEN}${BOLD}$CC $MSG_USING_BACKEND yay...${NC}"
@@ -235,22 +470,23 @@ if command -v yay &>/dev/null; then
     echo -e " ${CYAN}${BOLD}$NOTE pikaur $MSG_DETECTED pikaur...${NC}"
     backend="pikaur"
 else
-    echo -e "${RED}$MSG_AUR_HELPER_NOT_FOUND"; exit 1
+    echo -e "${YELLOW}${BOLD}$MSG_AUR_HELPER_NOT_FOUND"
+    backend="pacman"
 fi
 
 load_language
 
+[[ "$backend" == "pacman" && "$EUID" -ne 0 ]] && err07
 [[ "$backend" != "pacman" && "$EUID" -eq 0 ]] && err05
 
 ## !JAY UPDATE CHECKER
 
 get_upd() {
-    local check_cmd="$backend"
-    [[ "$aur_helper" != "none" ]] && check_cmd="$aur_helper"
-    if $check_cmd -Qua 2>/dev/null | grep -qi "jay-bin"; then
+    if "$backend" -Qua 2>/dev/null | grep -qi "jay-bin"; then
         echo -e "$MSG_JAY_UPD_FOUND"
     fi
 }
+
 get_upd
 
 log_rotate() {
@@ -260,14 +496,14 @@ log_rotate() {
     [[ "$log_size" -lt "$max_size" ]] && return
     local log_size_hr
     log_size_hr=$(du -sh "$LOG_FILE" | cut -f1)
-    echo -e "\n${YELLOW} $NOTE Log file is getting large ($log_size_hr).${NC}"
-    echo -e "${CYAN} $CC ${NC}Archive and rotate? [y/N]"
+    echo -e "\n${YELLOW} $NOTE $MSG_LARGE_LOG_FILE ($log_size_hr).${NC}"
+    echo -e -n "${CYAN} $CC ${NC}$ASK_ROTATE? [$ASK_1/$ASK_2]"
     read -r -n 1 opt
     echo
-    if [[ "$opt" =~ ^(y|Y)$ ]]; then
+    if [[ "$opt" =~ ^(y|Y|s|S)$ ]]; then
         mv "$LOG_FILE" "${LOG_FILE}.1"
         touch "$LOG_FILE"
-        success "Log rotated. Old log saved as jay.log.1"
+        success "$MSG_ROTATED jay.log.1"
     fi
 }
 
@@ -282,17 +518,9 @@ inform() {
     echo -e "${BOLD}${CYAN} / /_/ / /_/ / /_/ /  "
     echo -e "${BOLD}${CYAN} \____/\__,_/\__, /   "
     echo -e "${BOLD}${CYAN}  ${version_padded}   /____/    "
-    echo -e "\n ${YELLOW}release: ${CYAN}$rc\n ${YELLOW}codename: ${CYAN}'Catupiry'\n ${YELLOW}Made by: ${CYAN}xmlzitos154\n${GREEN} Thanks for using JAY!\n ${NC}"
+    echo -e "\n ${YELLOW}$MSG_RELEASE ${CYAN}$rc\n ${YELLOW}$MSG_CODENAME ${CYAN}'Catupiry'\n ${YELLOW}$MSG_MADE_BY ${CYAN}xmlzitos154\n${GREEN} $MSG_THANKS\n ${NC}"
     exit 0
 }
-
-#################################
-### START OF COMMANDS SESSION ###
-#################################
-
-#################################
-### START OF FLATPAK SESSION  ###
-#################################
 
 flatpak_only() {
     ! command -v flatpak &>/dev/null && err06
@@ -325,7 +553,8 @@ flatpak_only() {
 }
 
 run_flatpak() {
-    if [[ "$dry_run" == "true" ]]; then
+    if [[ "$dry_run" == "true" ]];
+    then
         echo -e "\n${YELLOW}$MSG_DRY_FLATPAK${NC}"
         echo -e "${CYAN}$MSG_DRY_RUN_RUN${NC} flatpak $flat_cmd ${final_args[*]}"
         echo -e "${GREEN}$MSG_DRY_RUN_NONE${NC}\n"
@@ -336,16 +565,17 @@ run_flatpak() {
     command -v flatpak &>/dev/null || err06
     case "$action" in
         update|-u)
-            step "Updating Flatpaks..."
+            step "$MSG_FLAT_UPDATING"
             flatpak update -y 2>&1 | tee -a "$tmp_out"
             flat_exit=${PIPESTATUS[0]}
-            if [[ $flat_exit -eq 0 ]]; then
+            if [[ $flat_exit -eq 0 ]];
+            then
                 logger "UPDATED (flatpak)" "${raw_cmd}"
             fi
             exit_code=$flat_exit
         ;;
         search|-s)
-            [[ -n "$flat_cmd" ]] && step "Searching in Flatpak..." && flatpak "$flat_cmd" "${final_args[@]}"
+            [[ -n "$flat_cmd" ]] && step "$MSG_FLAT_SEARCHING" && flatpak "$flat_cmd" "${final_args[@]}"
         ;;
         *)
             step "$MSG_USING_FLATPAK"
@@ -355,9 +585,6 @@ run_flatpak() {
         ;;
     esac
 }
-#################################
-###  END OF FLATPAK SESSION   ###
-#################################
 
 #! NETWORK TESTER
 tester() {
@@ -369,7 +596,7 @@ tester() {
     local spin='-\|/'
     while kill -0 $pid 2>/dev/null; do
         local i=$(( (i+1)%4 ))
-        printf "\r${CYAN} [%c] Aguardando resposta...\033[K${NC}" "${spin:$i:1}"
+        printf "\r${CYAN} [%c] $MSG_WAITING...\033[K${NC}" "${spin:$i:1}"
         sleep 0.1
     done
     printf "\r\033[K"
@@ -378,14 +605,15 @@ tester() {
         success "$MSG_NET_OK"
     else
         echo -e "${RED}$ERROR \033[K${NC}$MSG_NET_ERR"
-        logger "ERROR" "NETWORK" "Rede indisponível"
+        logger "ERROR" "NETWORK" "Unavailable network"
         exit 1
     fi
 }
+
 ## !BASE
 help_message() {
     display_ver
-    echo -e "$HLP_USAGE: jay [command] [options] [packages]"
+    echo -e "$HLP_USAGE: jay [$USG1] [$USG2] [$USG3]"
     echo -e "$HLP_USAGE: jay [-i | -r | -s | -u | check] [-f | --flatpak] [--noconfirm]"
     echo -e "$HLP_USAGE: jay [-q | query] [--list-aur] [--path-to-binary]"
     echo -e "$HLP_USAGE: jay [--restore-backup] [--path /path/to/backup/file.txt]"
@@ -446,49 +674,52 @@ upd() {
 ## !CACHE
 cache_mgr() {
     local cache_dir="$REAL_HOME/.cache/$backend"
-    if [[ -d "$cache_dir" ]]; then
-        step "Cleaning $backend builds..."
+    if [[ -d "$cache_dir" ]];
+    then
+        step "$MSG_CACHE_CLEANING_BUILDS $backend builds..."
         find "$cache_dir" -maxdepth 1 -type d -not -path "$cache_dir" -exec rm -rf {} +
-        success "Builds cleaned."
+        success "$MSG_CACHE_BUILDS_CLEANED"
     fi
     if command -v flatpak &>/dev/null; then
-        step "Cleaning unused Flatpaks..."
+        step "$MSG_CACHE_CLEANING_FLATPAK"
         flatpak uninstall --unused -y &>/dev/null
-        success "Flatpaks cleaned."
+        success "$MSG_CACHE_FLATPAK_CLEANED"
     fi
-    step "Cleaning pacman cache..."
+    step "$MSG_CACHE_CLEANING_PACMAN"
     cmd="-Sc"
     tag="CLEANED CACHE"
 }
 
 remove_orphans() {
-    step "Searching for orphan packages..."
+    step "$MSG_ORPHANS_SEARCHING"
     mapfile -t final_args < <("$backend" -Qqtd 2>/dev/null)
     orphans_n=${#final_args[@]}
-    if [[ "$orphans_n" -eq 0 ]]; then
-        success "No orphan packages found"
+    if [[ "$orphans_n" -eq 0 ]];
+    then
+        success "$MSG_ORPHANS_NONE"
         logger "SEARCHED ORPHANS" "clean"
         exit 0
     fi
-    echo "$NOTE $orphans_n Orphans found"
+    echo "$NOTE $orphans_n $MSG_ORPHANS_FOUND"
     printf '%s\n' "${final_args[@]}"
-    step "Removing orphans..."
+    step "$MSG_ORPHANS_REMOVING"
     cmd="-Rsn"
     tag="REMOVED ORPHANS"
 }
 
 check_conf() {
-    step "Searching for .pacnew/.pacsave files..."
+    step "$MSG_CONF_SEARCHING"
     pacnews=$(find /etc -regextype posix-extended -regex ".+\.pac(new|save)" 2>/dev/null)
-    if [[ -z "$pacnews" ]]; then
-        success "All clear! No conflicts found in /etc."
+    if [[ -z "$pacnews" ]];
+    then
+        success "$MSG_CONF_NONE"
     else
-        echo -e "${YELLOW} $NOTE Pending files found:${NC}"
+        echo -e "${YELLOW} $NOTE $MSG_CONF_PENDING${NC}"
         echo "$pacnews"
-        echo -e "\n${CYAN} $CC ${NC}Merge now with pacdiff? [y/N]"
+        echo -e "\n${CYAN} $CC ${NC}$MSG_CONF_MERGE_PROMPT"
         read -r -n 1 opt
         echo
-        [[ "$opt" =~ ^(y|Y)$ ]] && sudo pacdiff
+        [[ "$opt" =~ ^[yYgGsS]$ ]] && sudo pacdiff
     fi
     tag="CLEAR DIFFS"
 }
@@ -517,8 +748,8 @@ create_snapshot() {
 pin() {
     local pkg="${final_args[0]}"
     local conf="/etc/pacman.conf"
-    [[ -z "$pkg" ]] && error "specify a package"
-    
+    [[ -z "$pkg" ]] && error "$MSG_DEPS_SPECIFY"
+     
     local current
     current=$(grep -oP '(?<=^IgnorePkg = ).*' "$conf")
     
@@ -528,11 +759,13 @@ pin() {
         sudo sed -i "s/^IgnorePkg = .*/IgnorePkg = $new/" "$conf"
         success "$pkg unpinned."
         logger "UNPIN" "$pkg"
-        elif grep -q "^IgnorePkg" "$conf"; then
+    elif grep -q "^IgnorePkg" "$conf";
+    then
         sudo sed -i "s/^IgnorePkg = .*/IgnorePkg = $current $pkg/" "$conf"
         success "$pkg pinned."
         logger "PIN" "$pkg"
-        elif grep -q "^#IgnorePkg" "$conf"; then
+    elif grep -q "^#IgnorePkg" "$conf";
+    then
         sudo sed -i "s/^#IgnorePkg.*/IgnorePkg = $pkg/" "$conf"
         success "$pkg pinned."
         logger "PIN" "$pkg"
@@ -542,25 +775,27 @@ pin() {
         logger "PIN" "$pkg"
     fi
 }
+
 depends() {
-    ! command -v pactree &>/dev/null && { step "$MSG_INSTALL_CONTRIB pacman-contrib..."; "$backend" -S pacman-contrib --noconfirm; }
+    command -v pactree &>/dev/null && { step "$MSG_INSTALL_CONTRIB pacman-contrib..."; "$backend" -S pacman-contrib --noconfirm; }
     local pkg="${final_args[0]}"
-    [[ -z "$pkg" ]] && echo -e "$ALERT specify a package" && exit 1
-    ! pacman -Qi "$pkg" &>/dev/null && echo -e "$ERROR ${YELLOW}Package not found: '$pkg'" && exit 1
-    step "Checking reverse dependencies for '$pkg'..."
+    [[ -z "$pkg" ]] && echo -e "$ALERT $MSG_DEPS_SPECIFY" && exit 1
+    ! pacman -Qi "$pkg" &>/dev/null && echo -e "$ERROR ${YELLOW}$MSG_DEPS_NOT_FOUND '$pkg'" && exit 1
+    step "$MSG_DEPS_CHECKING '$pkg'..."
     local deps_n
     local deps
     deps=$(pactree -r "$pkg" 2>/dev/null | tail -n +2)
     deps_n=$(echo "$deps" | wc -l)
-    if [[ -z "$deps" ]]; then
-        success "No dependencies found for $pkg."
+    if [[ -z "$deps" ]];
+    then
+        success "$MSG_DEPS_NONE $pkg."
         logger "WHY" "$pkg -> No dependencies"
         exit 0
     fi
-    echo -e "\n $NOTE $deps_n dependencies found"
-    echo -e "${YELLOW} $CC '$pkg' is required by:${NC}"
+    echo -e "\n $NOTE $deps_n $MSG_DEPS_FOUND_COUNT"
+    echo -e "${YELLOW} $CC '$pkg' $MSG_DEPS_REQUIRED_BY${NC}"
     echo "$deps" | sed 's/^/  /'
-    echo -e "\n${CYAN} $NOTE Suggested removal order:${NC}"
+    echo -e "\n${CYAN} $NOTE $MSG_DEPS_SUGGESTED_ORDER${NC}"
     local pkgs
     pkgs=$(echo "$deps" | grep -oP '[\w][\w.+@-]+' | awk '!seen[$0]++' | tr '\n' ' ')
     echo "  jay -r $pkgs"
@@ -568,31 +803,33 @@ depends() {
 }
 
 show_stats() {
-    step "Gathering system statistics..."
+    step "$MSG_STATS_GATHERING"
     local native_pkgs=$(pacman -Qn | wc -l)
     local aur_pkgs=$(pacman -Qm | wc -l)
     local flat_pkgs=0
-    if command -v flatpak &>/dev/null; then
+    if command -v flatpak &>/dev/null;
+    then
         flat_pkgs=$(flatpak list --app | wc -l)
     fi
     local cache_size=$(du -sh /var/lib/pacman | cut -f1)
     local install_date=$(head -n1 /var/log/pacman.log | cut -d' ' -f1 | tr -d '[]' | cut -d'T' -f1)
     local aur_cache_size="0"
     [[ -d "$REAL_HOME/.cache/$backend" ]] && aur_cache_size=$(du -sh "$REAL_HOME/.cache/$backend" | cut -f1)
-    echo -e "\n${YELLOW}--- JAY SYSTEM STATS ---${NC}"
-    echo -e "${GREEN}Packages:${NC}"
-    echo -e "  $CC Native: $native_pkgs"
+    echo -e "\n${YELLOW}$MSG_STATS_TITLE${NC}"
+    echo -e "${GREEN}$MSG_STATS_PACKAGES${NC}"
+    echo -e "  $CC $MSG_STATS_NATIVE $native_pkgs"
     echo -e "  $CC AUR:    $aur_pkgs"
     [[ $flat_pkgs -gt 0 ]] && echo -e "  $CC Flatpak: $flat_pkgs"
-    echo -e "\n${CYAN}Disk Usage (Cache):${NC}"
-    echo -e "  $CC Pacman DB: $cache_size"
-    echo -e "  $CC System Born on: $install_date"
+    echo -e "\n${CYAN}$MSG_STATS_DISK_USAGE${NC}"
+    echo -e "  $CC $MSG_STATS_PACMAN_DB $cache_size"
+    echo -e "  $CC $MSG_STATS_BORN_ON $install_date"
     echo -e "  $CC $backend Cache: $aur_cache_size"
-    if command -v expac &>/dev/null; then
-        echo -e "\n${YELLOW}Top 10 Heaviest Packages:${NC}"
+    if command -v expac &>/dev/null;
+    then
+        echo -e "\n${YELLOW}$MSG_STATS_HEAVIEST${NC}"
         expac "%m %n" | sort -rn | head -10 | awk '{printf "  %s MB\t%s\n", $1/1024/1024, $2}'
     else
-        echo -e "\n${YELLOW}$NOTE Install 'expac' to see heaviest packages.${NC}"
+        echo -e "\n${YELLOW}$NOTE $MSG_STATS_EXPAC_WARN${NC}"
     fi
     echo -e "${CYAN}------------------------${NC}"
     tag="STATS"
@@ -600,25 +837,26 @@ show_stats() {
 
 view_pkgbuild() {
     local pkg="$1"
-    [[ -z $pkg ]] && echo "$NOTE Specify one package." && exit 1
-    step "Searching PKGBUILD for $pkg..."
+    [[ -z $pkg ]] && echo "$NOTE $MSG_PKGB_SPECIFY" && exit 1
+    step "$MSG_PKGB_SEARCHING $pkg..."
     local content
     content=$("$backend" -Gp "$pkg" 2>/dev/null)
-    if [[ -n "$content" ]]; then
+    if [[ -n "$content" ]];
+    then
         echo -e "${CYAN}--- PKGBUILD: $pkg ---${NC}\n"
         echo "$content" | less -R
         tag="VIEW PKGBUILD"
     else
-        error "Can't find PKGBUILD for '$pkg'. Is it in the AUR?"
+        error "$MSG_PKGB_NOT_FOUND '$pkg'. $MSG_PKGB_AUR_QUESTION"
     fi
 }
 
 list_aur() {
-    step "Filtering packages installed via AUR..."
+    step "$MSG_AUR_FILTERING"
     "$backend" -Qqm | column -t
     tag="LOCAL_QUERY (AUR)"
     local count=$("$backend" -Qqm | wc -l)
-    echo -e "\n${GREEN}$COMPLETE${NC} Total of $count AUR packages found."
+    echo -e "\n${GREEN}$COMPLETE${NC} $MSG_AUR_TOTAL_FOUND $count $MSG_AUR_PKGS_FOUND"
 }
 
 detect_country() {
@@ -626,34 +864,57 @@ detect_country() {
 }
 
 refresh_mirrors() {
-    step "Starting mirror optimization (Reflector)..."
+    step "$MSG_MIRROR_START"
     if ! command -v reflector &>/dev/null; then
-        echo -e "${YELLOW}$NOTE Reflector not found.${NC}"
-        read -p "Do you want to install reflector to optimize mirrors? [Y/n] " -n 1 -r
-        if [[ "$REPLY" =~ ^[Yy]$ || -z "$REPLY" ]]; then
+        echo -e "${YELLOW}$NOTE $MSG_REFLECTOR_NOT_FOUND${NC}"
+        read -p "$MSG_INSTALL_REFLECTOR_PROMPT" -n 1 -r
+        if [[ "$REPLY" =~ ^[YySs]$ || -z "$REPLY" ]]; then
+            echo
             sudo pacman -S reflector --noconfirm
         else
-            error "Reflector is required for this function."
+            echo
+            error "$MSG_REFLECTOR_REQUIRED"
         fi
     fi
     
     detect_country
     reflector_args=(--latest 20 --protocol https --sort rate)
     if [[ -n "$mirror_country" ]]; then
-        step "Using mirrors from: $mirror_country"
+        step "$MSG_USING_MIRRORS_FROM $mirror_country"
         reflector_args+=(--country "$mirror_country")
     else
-        step "Could not detect country, using worldwide mirrors"
+        step "$MSG_NO_COUNTRY_WORLDWIDE"
     fi
-    step "Creating backup at /etc/pacman.d/mirrorlist.bak"
+    
+    step "$MSG_MIRROR_BACKUP"
     sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
-    step "Fetching the fastest mirrors... (Please wait)"
+    step "$MSG_FETCHING_MIRRORS"
+    
     if sudo reflector "${reflector_args[@]}" --save /etc/pacman.d/mirrorlist; then
-        success "Mirrors updated and saved successfully."
+        success "$MSG_MIRRORS_SUCCESS"
         tag="UPDATE MIRRORS"
     else
-        error "Failed to update mirrors. Check your internet connection."
+        error "$MSG_MIRRORS_FAILED"
     fi
+}
+
+fix_keys() {
+    step "$MSG_GPG_START"
+    "$backend" -S archlinux-keyring --noconfirm --needed 2>&1 | tee "$tmp_out"
+    if [[ -f "$tmp_out" ]]; then
+        local keys=$(grep -oP '(?<=key\s)([A-F0-9]{16,})|(?<=ID\s)([A-F0-9]{16,})' "$tmp_out" | sort -u)
+        if [[ -n "$keys" ]]; then
+            for key in $keys; do
+                step "$MSG_IMPORTING_KEY $key"
+                gpg --recv-keys "$key" || gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys "$key"
+            done
+        fi
+    fi
+    step "$MSG_CLEANING_KEY_CACHE"
+    sudo find /etc/pacman.d/gnupg -type f -name "*.lck" -delete
+    sudo pacman-key --init
+    sudo pacman-key --populate archlinux
+    success "$MSG_DONE"
 }
 
 fix_keys() {
@@ -720,8 +981,9 @@ backup_func() {
 }
 
 ## !LOG_MANAGER
+
 sl() {
-    [[ ! -s "$LOG_FILE" ]] && echo "$NOTE The log file is empty." && exit 0
+    [[ ! -s "$LOG_FILE" ]] && echo "$NOTE $MSG_EMPTY_LOG" && exit 0
     if [[ -n "$log_lines" && "$log_lines" =~ ^[0-9]+$ ]]; then
         tail -n "$log_lines" "$LOG_FILE"
     else
@@ -759,8 +1021,8 @@ query() {
 
 check_updates() {
     tester
-    command -v checkupdates &>/dev/null || { step "Installing dependencies..."; "$backend" -S pacman-contrib --noconfirm; }
-    step "Searching for updates..."
+    command -v checkupdates &>/dev/null || { step "$MSG_INSTALL_DEPS"; "$backend" -S pacman-contrib --noconfirm; }
+    step "$MSG_SEARCHING_UPDATES"
     local tmp_repo=$(mktemp)
     local tmp_aur=$(mktemp)
     checkupdates > "$tmp_repo" 2>/dev/null &
@@ -781,17 +1043,18 @@ check_updates() {
     [[ -f "$tmp_flat" ]] && upds_flat_n=$(wc -l < "$tmp_flat")
     local total=$((upds_n + upds_aur_n + upds_flat_n))
     if [[ "$total" -eq 0 ]]; then
-        success "Your system is updated."
+        success "$MSG_SYSTEM_UPDATE" [cite: 157]
         rm -f "$tmp_repo" "$tmp_aur" ${tmp_flat:+"$tmp_flat"}
         return
     fi
     local flat_info=""
-    [[ "$use_flatpak" == "true" ]] && flat_info=" and $upds_flat_n in Flatpak"
-    echo -e "${YELLOW} $NOTE $total Updates found ($upds_aur_n in AUR$flat_info):${NC}"
-    [[ "$upds_n" -gt 0 ]] && echo -e "\nOfficial upds:\n${CYAN}$(cat "$tmp_repo")${NC}"
-    [[ "$upds_aur_n" -gt 0 ]] && echo -e "\nUpdates in AUR:\n${GREEN}$(cat "$tmp_aur")${NC}"
+    [[ "$use_flatpak" == "true" ]] && flat_info=" $MSG_AND $upds_flat_n $MSG_IN_FLATPAK"
+    echo -e "${YELLOW} $NOTE $total $MSG_UPDATES_FOUND ($upds_aur_n $MSG_IN_AUR$flat_info):${NC}"
+    
+    [[ "$upds_n" -gt 0 ]] && echo -e "\n$MSG_OFFICIAL_UPDATES\n${CYAN}$(cat "$tmp_repo")${NC}"
+    [[ "$upds_aur_n" -gt 0 ]] && echo -e "\n$MSG_AUR_UPDATES\n${GREEN}$(cat "$tmp_aur")${NC}"
     if [[ "$use_flatpak" == "true" && "$upds_flat_n" -gt 0 ]]; then
-        echo -e "\nUpdates in Flatpak:\n${YELLOW}$(cat "$tmp_flat")${NC}"
+        echo -e "\n$MSG_FLATPAK_UPDATES\n${YELLOW}$(cat "$tmp_flat")${NC}"
     fi
     rm -f "$tmp_repo" "$tmp_aur" ${tmp_flat:+"$tmp_flat"}
     logger "FOUND UPDATES" "$total updates (Flatpak: $use_flatpak)"
@@ -806,10 +1069,6 @@ get_package_path() {
         step "No binaries found in $pkg"
     fi
 }
-
-###############################
-### END OF COMMANDS SESSION ###
-###############################
 
 [[ -f "$LOG_FILE" ]] || touch "$LOG_FILE"
 [[ ! -w "$LOG_FILE" ]] && sudo chown "${SUDO_USER:-$USER}":"${SUDO_USER:-$USER}" "$LOG_FILE" 2>/dev/null
