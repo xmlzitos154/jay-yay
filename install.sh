@@ -6,6 +6,7 @@ REAL_HOME=$(getent passwd "$REAL_USER" 2>/dev/null | cut -d: -f6)
 REAL_HOME=${REAL_HOME:-/home/$REAL_USER}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE="$SCRIPT_DIR/main"
+
 if [[ -f "$SOURCE" ]]; then
     VER=$(sed -n 's/^VER="\(.*\)"/\1/p' "$SOURCE" | head -1)
     [[ -z "$VER" ]] && VER="unk"
@@ -27,8 +28,8 @@ run_installer() {
     step "Installing binary to $INSTALL_PATH..."
     install -Dm755 "$SOURCE" "$INSTALL_PATH"
     success "Binary installed."
+    chmod +x "$INSTALL_PATH"
     success "Adjusted permissions for $REAL_USER."
-    
     echo -e "\n${G}${B}Done!${NC} Jay installed successfully."
     read -n1 -s -p "Press any key to back..."
 }
@@ -58,7 +59,7 @@ while true; do
     case "$DO" in
         1) run_installer ;;
         2) run_remove ;;
-        3) echo -e "${C}Até logo!${NC}"; exit 0 ;;
-        *) echo -e "${R}Opção inválida.${NC}"; sleep 0.5 ;;
+        3) exit 0 ;;
+        *) echo -e "${R}Invalid option.${NC}"; sleep 0.5 ;;
     esac
 done
